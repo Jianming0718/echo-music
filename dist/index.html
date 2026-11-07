@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="description" content="Echo 音乐播放器。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Echo</title>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="spotify-theme.css">
+<link rel="stylesheet" href="minimal.css">
+</head>
+<body>
+<svg class="svg-defs" aria-hidden="true"><defs>
+<symbol id="i-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9a7 7 0 0 1 3-3m6 12a7 7 0 0 0 3-3"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H4V10"/><path d="M9 20v-7h6v7"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+<symbol id="i-library" viewBox="0 0 24 24"><path d="M4 4v16M9 4v16m5-15 5-1 3 15-5 1z"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20 5c-3-3-7-1-8 1-1-2-5-4-8-1-5 5 3 11 8 15C17 16 25 10 20 5Z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="4"/></symbol>
+<symbol id="i-next" viewBox="0 0 24 24"><path d="m5 5 10 7-10 7z" fill="currentColor" stroke="none"/><path d="M18 5v14" stroke-width="2.5"/></symbol>
+<symbol id="i-prev" viewBox="0 0 24 24"><path d="m19 5-10 7 10 7z" fill="currentColor" stroke="none"/><path d="M6 5v14" stroke-width="2.5"/></symbol>
+<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 6h3c5 0 6 12 11 12h4m-4-4 4 4-4 4M3 18h3c2 0 3-2 4-4m4-4c1-2 2-4 4-4h3m-4-4 4 4-4 4"/></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="M5 7h12a4 4 0 0 1 4 4v2M5 3 1 7l4 4m14 6H7a4 4 0 0 1-4-4v-2m16 10 4-4-4-4"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M3 9h4l5-5v16l-5-5H3zm13-1a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+<symbol id="i-queue" viewBox="0 0 24 24"><path d="M3 6h18M3 12h12M3 18h9m6-4 5 4-5 4z"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="m5 9 7 7 7-7"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3-1 3-3 1-2 3 2 2-1 4 3 2 3-1 2 4 3-1 1-3 4-1 1-4-3-2V6l-4-1-2-3z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-lyrics" viewBox="0 0 24 24"><path d="M4 5h16M4 10h12M4 15h16M4 20h9"/></symbol>
+<symbol id="i-friends" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M6 18a5 5 0 0 1-1-10 7 7 0 0 1 13-1 5.5 5.5 0 0 1 0 11H6Z"/></symbol>
+</defs></svg>
+<aside class="sidebar">
+<a class="brand" href="#" aria-label="Echo home"><span class="brand-mark"><svg><use href="#i-disc"/></svg></span>echo<span class="brand-dot">.</span></a>
+
+<nav class="side-nav" aria-label="Main navigation">
+<button class="nav-item active" data-view="discover"><svg><use href="#i-disc"/></svg>音乐</button>
+<button class="nav-item" data-view="search"><svg><use href="#i-search"/></svg>搜索</button>
+<button class="nav-item" data-view="library"><svg><use href="#i-library"/></svg>资料库</button>
+<button class="nav-item" data-view="liked"><svg><use href="#i-heart"/></svg>收藏<span class="liked-count">0</span></button>
+<button class="nav-item" data-view="friends"><svg><use href="#i-friends"/></svg>好友</button></nav>
+<div class="playlist-heading"><span>歌单</span><button class="icon-btn" id="new-playlist" aria-label="Create playlist"><svg><use href="#i-plus"/></svg></button></div>
+<div id="sidebar-playlists"></div>
+<button class="import-side" data-import><svg><use href="#i-plus"/></svg>导入音乐</button>
+<div class="sidebar-bottom"><button id="about-btn">关于 Echo</button></div>
+</aside>
+<div class="workspace">
+<header class="topbar">
+<a class="brand mobile-brand" href="#"><span class="brand-mark"><svg><use href="#i-disc"/></svg></span>echo<span class="brand-dot">.</span></a>
+<div class="top-actions"><button class="account-button" id="account-btn">登录</button><button class="icon-btn" id="settings-btn" aria-label="设置"><svg><use href="#i-settings"/></svg></button></div>
+</header>
+<main id="main" tabindex="-1"></main>
+
+</div>
+<section class="player" aria-label="Music player">
+<div class="mini-track"><button class="cover-button" id="expand-player" aria-label="Open now playing"><img id="mini-cover" src="assets/forest.jpg" alt="Sanctuary cover"></button><button class="mini-info" id="mini-info"><strong id="mini-title">Sanctuary</strong><span id="mini-artist">Scott Buckley</span></button><button class="icon-btn mini-like" id="mini-like" aria-label="Like current song"><svg><use href="#i-heart"/></svg></button></div>
+<div class="playback"><div class="playback-buttons"><button class="icon-btn shuffle-btn" aria-label="Enable shuffle"><svg><use href="#i-shuffle"/></svg></button><button class="icon-btn prev-btn" aria-label="Previous song"><svg><use href="#i-prev"/></svg></button><button class="play-button toggle-play" aria-label="Play"><svg><use href="#i-play"/></svg></button><button class="icon-btn next-btn" aria-label="Next song"><svg><use href="#i-next"/></svg></button><button class="icon-btn repeat-btn" aria-label="Repeat off"><svg><use href="#i-repeat"/></svg><span class="repeat-one" hidden>1</span></button></div><div class="timeline"><span id="elapsed">0:00</span><input id="seek" type="range" min="0" max="100" value="0" step="0.1" aria-label="Playback position"><span id="duration">4:06</span></div></div>
+<div class="player-tools"><span id="playback-status" role="status" hidden></span><button class="icon-btn" id="retry-playback" aria-label="Retry playback" hidden><svg><use href="#i-repeat"/></svg></button><button class="icon-btn" id="volume-toggle" aria-label="Mute"><svg><use href="#i-volume"/></svg></button><input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume"><button class="icon-btn" id="open-lyrics" aria-label="Open lyrics"><svg><use href="#i-lyrics"/></svg></button><span class="tool-divider"></span><button class="icon-btn queue-btn" aria-label="Open play queue"><svg><use href="#i-queue"/></svg></button></div>
+<button class="icon-btn mobile-play toggle-play" aria-label="Play"><svg><use href="#i-play"/></svg></button><button class="icon-btn mobile-queue queue-btn" aria-label="Open play queue"><svg><use href="#i-queue"/></svg></button><div class="mini-progress"><span></span></div>
+</section>
+<nav class="bottom-nav" aria-label="Mobile navigation"><button class="active" data-view="discover"><svg><use href="#i-disc"/></svg><span>音乐</span></button><button data-view="search"><svg><use href="#i-search"/></svg><span>搜索</span></button><button data-view="library"><svg><use href="#i-library"/></svg><span>资料库</span></button><button data-view="liked"><svg><use href="#i-heart"/></svg><span>收藏</span></button><button data-view="friends"><svg><use href="#i-friends"/></svg><span>好友</span></button></nav>
+<dialog id="sheet"><div class="sheet-top"><span id="sheet-eyebrow">ECHO</span><button class="icon-btn" id="close-sheet" aria-label="Close dialog"><svg><use href="#i-close"/></svg></button></div><div id="sheet-content"></div></dialog>
+<dialog id="now-playing" aria-label="Now playing and lyrics"><div class="np-atmosphere" aria-hidden="true"></div><div class="np-top"><button class="icon-btn" id="close-now" aria-label="Close now playing"><svg><use href="#i-down"/></svg></button><div><small>ECHO</small><span>正在播放</span></div><div class="np-top-tools"><button class="icon-btn lyrics-toggle active-control" id="toggle-lyrics" aria-label="Toggle lyrics" aria-pressed="true"><svg><use href="#i-lyrics"/></svg></button><button class="icon-btn queue-btn" aria-label="Open play queue"><svg><use href="#i-queue"/></svg></button></div></div><div class="np-stage"><section class="np-deck" aria-label="Playback"><img id="np-cover" src="assets/forest.jpg" alt="Current album artwork"><div class="np-meta"><div><h2 id="np-title">Sanctuary</h2><p id="np-artist">Scott Buckley</p></div><button class="icon-btn" id="np-like" aria-label="Like current song"><svg><use href="#i-heart"/></svg></button></div><div class="np-timeline"><input type="range" id="np-seek" min="0" max="100" value="0" step="0.1" aria-label="Playback position"><div><span id="np-elapsed">0:00</span><span id="np-duration">4:06</span></div></div><div class="np-controls"><button class="icon-btn shuffle-btn" aria-label="Enable shuffle"><svg><use href="#i-shuffle"/></svg></button><button class="icon-btn prev-btn" aria-label="Previous song"><svg><use href="#i-prev"/></svg></button><button class="play-button toggle-play" aria-label="Play"><svg><use href="#i-play"/></svg></button><button class="icon-btn next-btn" aria-label="Next song"><svg><use href="#i-next"/></svg></button><button class="icon-btn repeat-btn" aria-label="Repeat off"><svg><use href="#i-repeat"/></svg><span class="repeat-one" hidden>1</span></button></div><div class="np-bottom"><span></span><button class="icon-btn" id="track-actions" aria-label="Current song options"><svg><use href="#i-more"/></svg></button></div></section><section class="lyrics-panel" aria-label="Song lyrics"><div class="lyrics-heading"><span id="lyrics-status">LYRICS</span><button class="icon-btn" id="lyrics-options" aria-label="Lyrics options"><svg><use href="#i-more"/></svg></button></div><div class="lyrics-scroll" id="lyrics-scroll" tabindex="0" aria-label="Lyrics text"></div><div class="lyrics-footer"><a href="https:&#47;&#47;lrclib.net" target="_blank" rel="noopener" id="lyrics-credit">Lyrics via LRCLIB</a><button id="lyrics-follow" hidden>跟随歌词</button></div></section></div></dialog>
+<section id="youtube-dock" hidden><div class="youtube-dock-head"><a id="youtube-origin-link" target="_blank" rel="noopener">YouTube</a><button id="youtube-open-player" class="icon-btn" aria-label="打开放大播放器"><svg><use href="#i-arrow"/></svg></button></div><div id="youtube-stage"><div id="youtube-player"></div><button id="youtube-activate" class="youtube-activate">播放 YouTube</button></div></section>
+<input type="file" id="lyrics-file-input" accept=".lrc,.txt,text/plain" hidden>
+<input type="file" id="release-file-input" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac" hidden>
+<input type="file" id="file-input" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac" multiple hidden>
+<div id="toast" role="status" aria-live="polite"></div>
+<audio id="audio" preload="metadata" src="assets/sanctuary.mp3"></audio>
+<script src="config.js" defer></script>
+<script src="vendor/supabase.js" defer></script>
+<script src="account-service.js" defer></script>
+<script src="media-transport.js" defer></script>
+<script src="player-core.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
