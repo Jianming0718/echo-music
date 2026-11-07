@@ -223,3 +223,5 @@ body.youtube-active #now-playing #np-inline-cover{display:block;width:54px;heigh
  .chat-form{padding-top:10px}.chat-form textarea{min-height:60px;padding:10px 12px}.chat-form>label{display:none}
  .person-actions{gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:160px}
 }
+
+.video-card>div{aspect-ratio:1}

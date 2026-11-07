@@ -204,10 +204,34 @@ document.addEventListener('change',e=>{if(e.target.id==='release-region'){releas
 document.addEventListener('click',e=>{if(e.target.closest('#retry-releases'))scheduleReleaseSearch(0)});
 
 const youtubeFeatured=[
- {videoId:'c6ASQOwKkhk',title:'The Astronaut',artist:'Jin'},
- {videoId:'gdZLi9oWNZg',title:'Dynamite',artist:'BTS'},
- {videoId:'gQlMMD8auMs',title:'Pink Venom',artist:'BLACKPINK'},
- {videoId:'i0p1bmr0EmE',title:'What is Love?',artist:'TWICE'}
+ {
+  "videoId": "c6ASQOwKkhk",
+  "title": "The Astronaut",
+  "artist": "Jin",
+  "cover": "https://yt3.googleusercontent.com/eo8uvebF6IDxFyjHla9I4F91xMUwTmGzT1D4oZL8Z7YVxiVTXDMnn39981gsGmK7bBFe-DO_R9BZfiN6=w120-h120-l90-rj",
+  "album": "The Astronaut"
+ },
+ {
+  "videoId": "gdZLi9oWNZg",
+  "title": "Dynamite",
+  "artist": "BTS",
+  "cover": "https://yt3.googleusercontent.com/n1-pqG9jYCHqxiSSq7DORgk10PCS7vyMX5VX0o0HoPwEEIZM5pamJAFIDOHqo7Hl27hJ9YvqTahya3Fg=w120-h120-l90-rj",
+  "album": "BE"
+ },
+ {
+  "videoId": "gQlMMD8auMs",
+  "title": "Pink Venom",
+  "artist": "BLACKPINK",
+  "cover": "https://yt3.googleusercontent.com/OeyObLE4rESv5Qu7MruXwBWsCbmXvpJl8652fUKrVzmt6SNYCvZIugmGxHRgBHN_XUSODkH3x6plN_tc=w120-h120-l90-rj",
+  "album": "Pink Venom"
+ },
+ {
+  "videoId": "i0p1bmr0EmE",
+  "title": "What is Love?",
+  "artist": "TWICE",
+  "cover": "https://yt3.googleusercontent.com/HLnp2ibpDGdKGYLRJVQUkuqg68KxiaEsCPuS8aJH0PQInvXhUB33Tmx6LDqDfo3cIZZpAEnCjKxh2U-W6g=w120-h120-l90-rj",
+  "album": "What is Love?"
+ }
 ];
 let youtubeResults=[],youtubeTimer=null,youtubeController=null,youtubeEpoch=0,youtubeContinuation=null,youtubeFilter='songs',youtubeLoading=false;
 function youtubeTrack(video){return {id:'youtube-'+video.videoId,videoId:video.videoId,title:video.title||'YouTube 视频 '+video.videoId,artist:video.artist||'YouTube',album:video.album||'YouTube Music',mood:'YouTube',duration:Number(video.duration)||0,category:EchoMusicLibrary.classify(video),cover:video.cover?safeArtwork(video.cover):'https://i.ytimg.com/vi/'+video.videoId+'/hqdefault.jpg',src:'youtube:'+video.videoId,provider:'youtube',remote:true,permalink:'https://www.youtube.com/watch?v='+video.videoId}}
@@ -232,7 +256,7 @@ now.addEventListener('scroll',()=>{if(audio.provider==='youtube')placeYouTube()}
 if(typeof ResizeObserver==='function')new ResizeObserver(()=>{if(audio.provider==='youtube'&&now.open)placeYouTube()}).observe($('#np-video-slot'));
 document.addEventListener('keydown',e=>{if(!now.open||sheet.open)return;if(e.key==='Escape'&&now.dataset.mode==='youtube')now.close();if(e.key==='Tab'&&now.dataset.mode==='youtube'){const nodes=$$('button:not([disabled]),input:not([disabled]),a[href],iframe,[tabindex="0"]',now).concat($$('a[href],button:not([disabled]),iframe',$('#youtube-dock'))).filter(el=>{for(let node=el;node&&node!==document;node=node.parentElement){if(node.hidden||getComputedStyle(node).display==='none'||getComputedStyle(node).visibility==='hidden')return false}return true});const first=nodes[0],last=nodes.at(-1);if(!first)return;if(e.shiftKey&&(document.activeElement===first||!nodes.includes(document.activeElement))){e.preventDefault();last.focus()}else if(!e.shiftKey&&(document.activeElement===last||!nodes.includes(document.activeElement))){e.preventDefault();first.focus()}}});
 document.addEventListener('submit',e=>{if(e.target.id==='youtube-form'){e.preventDefault();const form=e.target,data=new FormData(form),id=parseYouTubeURL(String(data.get('url')));if(!id){$('.form-message',form).textContent='请输入有效的 YouTube 视频链接。';return}const item=youtubeTrack({videoId:id,title:String(data.get('title')||'').trim(),artist:String(data.get('artist')||'').trim()});const existing=getTrack(item.id);if(!existing)tracks.push(item);sheet.close();playYouTube(id,item)}if(e.target.id==='music-search-form'){e.preventDefault();if(searchSource==='youtube')scheduleYouTubeSearch(0)}if(e.target.id==='home-search-form'){e.preventDefault();const term=$('#home-query').value.trim();if(!term)return;searchSource='youtube';setView('search');query=term;$('#music-search').value=term;renderResults()}});
-for(const video of youtubeFeatured)if(!getTrack('youtube-'+video.videoId))tracks.push(youtubeTrack(video));
+for(const video of youtubeFeatured){const existing=getTrack('youtube-'+video.videoId);if(!existing)tracks.push(youtubeTrack(video));else if(video.cover)Object.assign(existing,{cover:video.cover,album:video.album||existing.album})}
 
 const cloud=new EchoAccountService(window.ECHO_CONFIG||{}),sharedCollections=new Map();
 const deletedAccountIds=new Set();
