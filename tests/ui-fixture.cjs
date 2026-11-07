@@ -3,7 +3,7 @@ const {indexedDB}=require('fake-indexeddb');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.join(__dirname,'../dist');
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function fixture({config={},fetcher,videoReadyDelay=0,width=390}={}){
+function fixture({config={},fetcher,videoReadyDelay=0,width=390,autoStart=true}={}){
  const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(fs.readFileSync(root+'/index.html','utf8'),{url:'https://echo.test/echo/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window,d=w.document;
  Object.defineProperty(w,'innerWidth',{value:width});w.indexedDB=indexedDB;w.CSS={escape:x=>x};w.scrollTo=()=>{};w.HTMLElement.prototype.scrollTo=function(options){this.scrollTop=options.top||0};
@@ -15,9 +15,11 @@ function fixture({config={},fetcher,videoReadyDelay=0,width=390}={}){
  w.fetch=fetcher||(async()=>({ok:false,status:404,json:async()=>[]}));
  const videos=[];
  w.YT={Player:class{
-  constructor(container,options){this.options=options;this.state=5;this.time=0;this.data={};this.playCount=0;const frame=d.createElement('iframe');frame.title='YouTube video player';container.replaceWith(frame);videos.push(this);setTimeout(()=>options.events.onReady(),videoReadyDelay)}
+  constructor(container,options){this.options=options;this.state=5;this.time=0;this.data={};this.playCount=0;const frame=container.tagName==='IFRAME'?container:d.createElement('iframe');frame.title='YouTube video player';if(frame!==container)container.replaceWith(frame);this.frame=frame;videos.push(this);setTimeout(()=>options.events.onReady(),videoReadyDelay)}
   cueVideoById(id){this.data={video_id:id,title:'Video title',author:'Artist'};this.state=5;this.options.events.onStateChange({data:5})}
-  playVideo(){this.playCount++;this.state=1;this.options.events.onStateChange({data:1})}
+  playVideo(){this.playCount++;this.state=3;this.options.events.onStateChange({data:3});if(autoStart)this.start()}
+  loadVideoById(value){this.data={video_id:value.videoId,title:'Video title',author:'Artist'};this.time=value.startSeconds||0;this.state=5;this.options.events.onStateChange({data:5});this.playVideo()}
+  start(){this.state=1;this.options.events.onStateChange({data:1})}
   pauseVideo(){this.state=2;this.options.events.onStateChange({data:2})}
   getVideoData(){return this.data}getPlayerState(){return this.state}getDuration(){return 180}getCurrentTime(){return this.time}getPlaybackRate(){return 1}setVolume(){}seekTo(time){this.time=time}destroy(){}
  }};

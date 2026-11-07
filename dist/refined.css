@@ -225,3 +225,10 @@ body.youtube-active #now-playing #np-inline-cover{display:block;width:54px;heigh
 }
 
 .video-card>div{aspect-ratio:1}
+.toggle-play.is-buffering{position:relative}.toggle-play.is-buffering>svg{visibility:hidden}.toggle-play.is-buffering:after{content:"";position:absolute;width:18px;height:18px;left:50%;top:50%;margin:-9px 0 0 -9px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+#youtube-feedback{padding:10px 12px 12px;border-top:1px solid #ffffff12;background:#192013;color:#d0ddc3;font-size:12px;line-height:1.6}
+#youtube-feedback[hidden]{display:none}#youtube-feedback p{margin:0 0 6px}#youtube-feedback a{color:#d3ed9b;text-decoration:underline;font-size:11px}
+body.youtube-active #now-playing #np-video-slot{height:var(--video-height,229px)}
+@media(max-width:640px){body.youtube-active #now-playing .np-stage{grid-template-rows:minmax(var(--video-height,229px),1fr) auto auto auto}body.youtube-active #now-playing.lyrics-visible .np-stage{grid-template-rows:var(--video-height,229px) 44px minmax(64px,1fr) auto auto}}
+@media(prefers-reduced-motion:reduce){.toggle-play.is-buffering:after{animation:none}}
+#youtube-feedback button{font-size:11px;min-height:34px;padding:5px 10px;border:1px solid #ffffff26;border-radius:7px;margin-right:10px}

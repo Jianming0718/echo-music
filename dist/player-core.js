@@ -140,10 +140,10 @@ class EchoPlayerCore extends EventTarget {
         this.wantPlayback=false;
         this.state.status='paused';
         this.notify();
-        this.emit('error',{kind:'gesture',message:'Tap Play to start the audio on this device.'});
+        this.emit('error',{kind:'gesture',message:this.audio.provider==='youtube'&&error.message?error.message:'Tap Play to start the audio on this device.'});
         return false;
       }
-      this.fail('This audio could not play. Retry or choose another song.');
+      this.fail(this.audio.provider==='youtube'&&error.message?error.message:'This audio could not play. Retry or choose another song.');
       return false;
     }
   }
@@ -154,6 +154,7 @@ class EchoPlayerCore extends EventTarget {
     this.notify();
   }
   toggle() {
+    if(this.wantPlayback&&['loading','buffering'].includes(this.state.status)){this.pause();return Promise.resolve(false)}
     if(this.audio.paused)return this.play();
     this.pause();
     return Promise.resolve(false);
@@ -344,6 +345,7 @@ class EchoPlayerCore extends EventTarget {
     });
     listen('canplay',()=>{
       if(!this.audio.paused&&this.wantPlayback)this.state.status='playing';
+      else if(this.wantPlayback)this.state.status='loading';
       else if(this.state.status!=='error')this.state.status='paused';
       this.notify();
     });
