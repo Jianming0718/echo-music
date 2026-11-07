@@ -1,19 +1,21 @@
 {
   "name": "echo-music",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "license": "MIT",
   "scripts": {
     "config": "node scripts/write-config.mjs",
     "vendor": "node scripts/vendor.mjs",
-    "test": "node tests/player-core.test.cjs && node tests/database.test.cjs"
+    "test": "node tests/player-core.test.cjs && node tests/database.test.cjs && node tests/search.test.mjs && node tests/ui.test.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.15",
     "esbuild": "0.28.2",
-    "@electric-sql/pglite": "0.5.15"
+    "fake-indexeddb": "6.2.7",
+    "jsdom": "31.0.0"
   }
 }

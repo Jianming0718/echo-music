@@ -359,7 +359,7 @@ class EchoPlayerCore extends EventTarget {
       if(this.switching||!this.state.currentId)return;
       const code=this.audio.error?.code;
       if(code===1)return;
-      const message=code===3?'This file could not be decoded. Try a supported audio format.':code===4?'This audio source is unavailable or unsupported. Retry or choose another song.':'The audio connection failed. Retry when you are online, or choose a song saved on your device.';
+      const message=this.audio.error?.message||(code===3?'This file could not be decoded. Try a supported audio format.':code===4?'This audio source is unavailable or unsupported. Retry or choose another song.':'The audio connection failed. Retry when you are online, or choose a song saved on your device.');
       this.fail(message);
     });
   }

@@ -13,4 +13,4 @@ if(supabaseAnonKey&&!supabaseAnonKey.startsWith('sb_publishable_')){
  if(claims.role!=='anon')throw new Error('Only a publishable or anon key may be put in the browser.');
 }
 await writeFile(new URL('../dist/config.js',import.meta.url),"'use strict';\nwindow.ECHO_CONFIG=Object.freeze("+JSON.stringify({supabaseUrl,supabaseAnonKey,youtubeApiKey})+");\n");
-console.log('Public browser configuration written. Accounts: '+Boolean(supabaseUrl)+'. YouTube search: '+Boolean(youtubeApiKey)+'.');
+console.log('Public browser configuration written. Accounts: '+Boolean(supabaseUrl)+'. Music search backend configured: '+Boolean(supabaseUrl)+'. Optional YouTube Data API: '+Boolean(youtubeApiKey)+'.');

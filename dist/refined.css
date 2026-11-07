@@ -1,0 +1,176 @@
+:root{--muted:#a4aaa0}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #d3ed9b;outline-offset:4px}
+.icon-btn{min-width:40px;min-height:40px}
+input[type=search],.form-field input,.people-search input{font-size:16px}
+.home-search input,.search-box input{font-size:16px}
+.home-search>label{font-size:12px}
+.track-name strong{font-size:14px;line-height:1.4}
+.track-name span{font-size:12px;line-height:1.4;margin-top:4px}
+.track-row{min-height:72px}
+.track-album,.track-duration{font-size:12px}
+.video-card strong{font-size:14px;line-height:1.4}
+.video-card small{font-size:12px}
+.search-box label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.search-box{position:relative;gap:12px}
+.search-box input{min-width:0;padding:15px 0}
+.search-box #clear-search[hidden]{display:none}
+.library-shortcuts{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 28px}
+.library-shortcuts button{display:flex;align-items:center;gap:10px;border:1px solid #ffffff16;border-radius:12px;padding:13px 18px;font-size:13px;background:#191d17}
+.library-shortcuts svg{width:18px;height:18px;color:#d3ed9b}
+.search-filters{display:flex;gap:8px;margin:20px 0}
+.search-filters button{border:1px solid #ffffff18;border-radius:22px;padding:9px 16px;font-size:12px;color:#a5b099}
+.search-filters button.active{background:#d3ed9b;color:#1d2814;border-color:transparent}
+.search-heading{display:flex;justify-content:space-between;align-items:center;margin:22px 0 12px}
+.search-heading h2{font-size:15px;font-weight:500;margin:0}
+.search-heading>span{font-size:11px;color:#8e9984}
+.catalog-more{padding:24px 0;text-align:center}
+.catalog-more button{min-height:44px}
+.catalog-loading{display:flex;align-items:center;gap:10px;padding:30px 0;font-size:13px}
+.catalog-loading:before{content:"";width:14px;height:14px;border:2px solid #ffffff25;border-top-color:#d3ed9b;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+body #now-playing{padding:24px 36px max(24px,env(safe-area-inset-bottom));background:#151a17;overflow:hidden}
+body #now-playing .np-atmosphere{filter:blur(85px) saturate(.7);opacity:.23}
+body #now-playing .np-top{margin:0 0 24px;min-height:44px;flex:none}
+body #now-playing .np-top>.icon-btn{margin-right:0}
+body #now-playing .np-top>div:nth-child(2){position:absolute;left:50%;transform:translateX(-50%);pointer-events:none}
+body #now-playing .np-top small{display:none}
+body #now-playing .np-top span{font-size:12px;letter-spacing:1px;color:#d1d7ce;margin:0}
+body #now-playing .np-top-tools{gap:4px}
+body #now-playing .np-stage{display:grid;grid-template-columns:minmax(0,360px);grid-template-rows:minmax(0,1fr);gap:70px;min-height:0;max-width:1080px;margin:auto;flex:1;width:100%;align-items:center}
+body #now-playing.lyrics-visible .np-stage{grid-template-columns:minmax(0,360px) minmax(0,1fr)}
+body #now-playing .np-deck,body.youtube-active #now-playing .np-deck{display:flex;flex-direction:column;min-height:0;height:auto;width:100%;max-width:360px;margin:auto}
+body.youtube-active #now-playing .np-deck:before{display:none}
+body #now-playing #np-cover{width:100%;max-height:43dvh;aspect-ratio:1;object-fit:cover;border-radius:12px;box-shadow:0 20px 60px #0005;margin:0;align-self:center}
+body #now-playing .np-meta{display:flex;align-items:center;gap:12px;margin:25px 0 20px!important;min-width:0;padding:0}
+body #now-playing .np-meta>div{min-width:0;flex:1}
+body #now-playing .np-meta h2{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:21px!important;line-height:1.4;letter-spacing:-.4px!important;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body #now-playing .np-meta p{font-size:13px!important;line-height:1.4;margin:5px 0 0!important;color:#c2cab3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body #now-playing .np-timeline{position:static;min-width:0}
+body #now-playing .np-timeline input{width:100%;margin:12px 0;height:4px;cursor:pointer;touch-action:pan-y}
+body #now-playing .np-timeline>div{font-size:11px;font-variant-numeric:tabular-nums;color:#b0baaa;margin:0}
+body #now-playing .np-controls{position:static;display:flex;justify-content:space-between;align-items:center;gap:8px;margin:15px 0 0!important;flex:none}
+body #now-playing .np-controls .play-button{background:#e4eed8;color:#182111;height:60px;width:60px;border-radius:50%}
+body #now-playing .np-controls .play-button svg{height:32px;width:32px}
+body #now-playing .np-controls .icon-btn svg{height:23px;width:23px}
+body #now-playing .np-controls .shuffle-btn svg,body #now-playing .np-controls .repeat-btn svg{height:18px;width:18px}
+body #now-playing .np-bottom{display:none}
+body #now-playing .lyrics-panel{min-height:0;height:100%;max-height:72dvh;align-self:stretch;padding:0;margin:0;width:100%}
+body #now-playing .lyrics-heading{min-height:40px;font-size:10px;letter-spacing:0;margin:0;color:#c3cdb7}
+body #now-playing .lyrics-scroll{position:relative;flex:1;min-height:0;scroll-behavior:smooth;-webkit-mask-image:linear-gradient(transparent,#000 12%,#000 85%,transparent);mask-image:linear-gradient(transparent,#000 12%,#000 85%,transparent)}
+body #now-playing .lyrics-lines{padding:140px 0 240px}
+body #now-playing .lyric-line{font-size:clamp(26px,2.8vw,39px);line-height:1.45;letter-spacing:-.6px;padding:12px 0;color:#ffffff50;text-align:left;transition:color .2s}
+body #now-playing .lyric-line.is-current{color:#fff;text-shadow:none}
+body #now-playing .lyric-line.is-past{color:#ffffff35}
+body #now-playing .plain-lyrics .lyric-line{color:#e0e5d9;font-weight:500;font-size:26px}
+body #now-playing .lyrics-footer{font-size:10px;min-height:34px;padding-top:10px;flex:none}
+body #now-playing .lyrics-footer button{font-size:11px;min-height:36px;padding:8px 12px}
+body #now-playing .lyrics-state{max-width:340px;padding:40px 0;margin:auto 0}
+body #now-playing .lyrics-state>svg{display:none}
+body #now-playing .lyrics-state h3{font-family:inherit;font-size:23px;font-weight:600;letter-spacing:-.4px;line-height:1.4;margin:0 0 10px}
+body #now-playing .lyrics-state p{font-size:13px;line-height:1.7;color:#b0bba7;margin:0 0 18px}
+.lyrics-state-actions{display:flex;gap:10px;flex-wrap:wrap}
+body #now-playing .lyrics-text-button{font-size:12px;padding:10px 14px;min-height:42px;border-radius:10px}
+body #now-playing #np-video-slot{display:none}
+body.youtube-active #now-playing #np-video-slot{display:block;width:100%;height:229px;flex:none;align-self:center}
+body.youtube-active #now-playing #np-cover{display:none}
+body.now-open #youtube-dock{border:0;box-shadow:none;border-radius:12px}
+.youtube-dock-head>a{font-size:11px}
+.youtube-dock-head .icon-btn{min-height:28px;min-width:32px}
+body.now-open #youtube-open-player{visibility:hidden}
+#youtube-stage{height:200px}
+.mobile-queue{min-height:44px;min-width:40px}
+@media(max-width:800px){
+  body #now-playing .np-stage{gap:35px;grid-template-columns:minmax(0,300px)}
+  body #now-playing.lyrics-visible .np-stage{grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+}
+@media(max-width:640px){
+  .workspace,.ios .workspace{padding-bottom:calc(155px + env(safe-area-inset-bottom))}
+  .topbar,.ios .topbar{height:64px;margin:0 20px;padding-top:env(safe-area-inset-top)}
+  .mobile-brand{font-size:26px}.account-button{font-size:12px;min-height:38px}
+  main{padding:16px 20px 28px}
+  .view-heading h1{font-size:28px;font-weight:650;letter-spacing:-1px}
+  .compact-heading{gap:10px;flex-wrap:wrap;margin-bottom:22px}
+  .compact-heading .library-toolbar{justify-content:flex-start;gap:8px;flex-wrap:nowrap}
+  .compact-heading .library-toolbar button{font-size:12px;padding:10px 12px;min-height:42px}
+  .section-heading{margin:30px 0 16px}.section-heading h2{font-size:17px}
+  .home-search>div{border-radius:14px;padding:6px 12px;gap:10px;background:#1b2019}
+  .home-search>label{font-size:12px;margin-bottom:12px}
+  .home-search input{font-size:16px;padding:10px 0;line-height:1.5}
+  .home-search .icon-btn{min-height:42px;min-width:36px}
+  .video-grid{gap:22px 14px}.video-card>div{aspect-ratio:1.2;border-radius:12px}
+  .video-card strong{font-size:13px;margin:11px 0 4px}.video-card small{font-size:11px}
+  .video-card>div>span{width:32px;height:32px}
+  .track-row,.ios .track-row{grid-template-columns:minmax(0,1fr) 42px;gap:4px;padding:10px 0;min-height:72px}
+  .track-row.current,.ios .track-row.current{padding:10px 8px;margin:0 -8px;border-radius:12px}
+  .track-main{gap:12px;min-width:0}.track-main img,.ios .track-row .track-main img{width:48px;height:48px;border-radius:9px}
+  .track-name strong{font-size:14px;font-weight:550}.track-name span{font-size:12px;margin-top:5px}
+  .track-duration,.track-actions>[data-like]{display:none}.track-actions{gap:0;justify-content:flex-end}.track-actions .icon-btn{width:42px;min-height:44px}
+  .track-header{display:none}
+  .library-shortcuts{gap:9px;margin-bottom:24px}.library-shortcuts button{font-size:13px;padding:13px 17px;flex:1;justify-content:center}
+  .collection h3{font-size:14px}.collection p{font-size:12px}.collection-art,.ios .collection-art{border-radius:12px}
+  .bottom-nav,.ios .bottom-nav{display:flex;justify-content:space-around;height:calc(62px + env(safe-area-inset-bottom));padding:7px 20px calc(6px + env(safe-area-inset-bottom));left:0;right:0;bottom:0;border:0;border-top:1px solid #ffffff09;border-radius:0;background:#111510f5;box-shadow:none;backdrop-filter:blur(20px)}
+  .bottom-nav button{flex:1;font-size:10px;gap:5px;min-height:44px}.bottom-nav button svg{width:22px;height:22px}
+  .player,.ios .player{bottom:calc(69px + env(safe-area-inset-bottom));height:66px;border-radius:14px;padding:0 10px;left:12px;right:12px;gap:3px;background:#283222f8}
+  .mini-track{gap:10px;min-width:0}.cover-button{width:44px;height:44px;border-radius:8px;flex:none}
+  .mini-info{min-width:0}.mini-info strong{font-size:13px}.mini-info span{font-size:11px;margin-top:4px}
+  .mobile-play{min-height:44px;min-width:44px}.mobile-play svg{width:26px;height:26px}
+  .mini-progress{height:2px;left:10px;right:10px}
+  .search-sources,.ios .search-sources{gap:9px}.search-sources button,.ios .search-sources button{font-size:13px;padding:10px 16px;min-height:42px}
+  .search-box{margin:22px 0 10px;padding:0 12px;border-radius:14px;min-height:54px}
+  .search-box input{font-size:16px;line-height:1.5}.search-box>svg{width:20px;height:20px;flex:none}
+  .primary-btn,.secondary-btn{font-size:13px;min-height:42px}.empty-state h2{font-size:20px}.empty-state p{font-size:13px}.empty-state .primary-btn{font-size:13px}
+  .empty-state{border:0;padding:35px 12px}.form-field{font-size:13px}.form-field input{font-size:16px}.setting-row label{font-size:13px}
+  #sheet-content p{font-size:13px}#sheet-content h2{font-size:25px}.action-menu button{font-size:13px;min-height:48px}
+  .person-row strong{font-size:14px}.person-row small{font-size:12px}.person-actions .secondary-btn,.person-actions .text-button{font-size:12px}
+  body #now-playing,body.ios #now-playing{padding:calc(8px + env(safe-area-inset-top)) 24px calc(14px + env(safe-area-inset-bottom));height:100dvh;max-height:100dvh;overflow-y:auto}
+  body #now-playing .np-top{margin:0 0 14px;min-height:44px}
+  body #now-playing .np-top .icon-btn{width:42px;height:44px}
+  body #now-playing .np-stage,body #now-playing.lyrics-visible .np-stage{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto auto;grid-template-areas:"media" "meta" "timeline" "controls";gap:0;width:100%;max-width:420px;height:auto;margin:0 auto;min-height:0;align-items:stretch;flex:1}
+  body #now-playing .np-deck,body.youtube-active #now-playing .np-deck,body.youtube-active #now-playing.lyrics-visible .np-deck{display:contents}
+  body #now-playing #np-cover{grid-area:media;width:min(100%,43dvh);height:auto;max-height:43dvh;aspect-ratio:1;object-fit:cover;justify-self:center;align-self:center;min-height:0;margin:0;box-shadow:0 18px 50px #0005;border-radius:14px}
+  body #now-playing .np-meta{grid-area:meta;margin:22px 0 18px!important;min-height:46px}
+  body #now-playing .np-meta h2{font-size:22px!important}
+  body #now-playing .np-meta p{font-size:13px!important}
+  body #now-playing .np-meta .icon-btn{min-width:44px;width:44px}
+  body #now-playing .np-meta .icon-btn svg{width:22px!important;height:22px}
+  body #now-playing .np-timeline{grid-area:timeline;position:static;align-self:end}
+  body #now-playing .np-controls{grid-area:controls;position:static;margin:12px 0 0!important;min-height:60px}
+  body #now-playing .np-controls .play-button{height:60px;width:60px}
+  body #now-playing .np-controls .icon-btn svg{width:25px;height:25px}
+  body #now-playing .np-controls .shuffle-btn svg,body #now-playing .np-controls .repeat-btn svg{width:19px;height:19px}
+  body #now-playing.lyrics-visible .np-stage{grid-template-columns:48px minmax(0,1fr);grid-template-rows:52px minmax(100px,1fr) auto auto;grid-template-areas:"media meta" "lyrics lyrics" "timeline timeline" "controls controls";column-gap:12px}
+  body #now-playing.lyrics-visible #np-cover{display:block;width:48px;height:48px;border-radius:8px;margin:0;box-shadow:none}
+  body #now-playing.lyrics-visible .np-meta{margin:0!important;min-height:0;align-self:center;gap:8px}
+  body #now-playing.lyrics-visible .np-meta h2{font-size:15px!important;letter-spacing:-.2px!important}
+  body #now-playing.lyrics-visible .np-meta p{font-size:12px!important;margin-top:4px!important}
+  body #now-playing.lyrics-visible .lyrics-panel{grid-area:lyrics;display:flex;min-height:0;max-height:none;height:auto;flex:none;padding:8px 0 14px;margin:0;width:100%}
+  body #now-playing .lyrics-heading{min-height:36px;font-size:10px}
+  body #now-playing .lyrics-lines{padding:90px 0 180px}
+  body #now-playing .lyric-line,body.youtube-active #now-playing .lyric-line{font-size:28px;line-height:1.45;padding:11px 0;letter-spacing:-.5px}
+  body #now-playing .plain-lyrics .lyric-line{font-size:24px}
+  body #now-playing .lyrics-state{padding:28px 0;margin:0;max-width:100%}
+  body #now-playing .lyrics-state h3,body.youtube-active #now-playing .lyrics-state h3{font-size:21px}
+  body #now-playing .lyrics-state p,body.youtube-active #now-playing .lyrics-state p{font-size:13px;margin-bottom:16px}
+  body #now-playing .lyrics-text-button,body.youtube-active #now-playing .lyrics-text-button{font-size:12px;min-height:40px}
+  body #now-playing .lyrics-footer{font-size:10px;padding:6px 0 0;min-height:30px}
+  body.youtube-active #now-playing .np-stage{grid-template-rows:minmax(229px,1fr) auto auto auto}
+  body.youtube-active #now-playing #np-video-slot{grid-area:media;height:229px;align-self:center}
+  body.youtube-active #now-playing.lyrics-visible .np-stage{grid-template-columns:minmax(0,1fr);grid-template-rows:229px 44px minmax(90px,1fr) auto auto;grid-template-areas:"media" "meta" "lyrics" "timeline" "controls";column-gap:0}
+  body.youtube-active #now-playing.lyrics-visible #np-cover{display:none}
+  body.youtube-active #now-playing.lyrics-visible .np-meta{margin:7px 0 0!important}
+  body.youtube-active #now-playing.lyrics-visible .lyrics-heading{min-height:28px}
+  body.youtube-active #now-playing.lyrics-visible .lyrics-panel{padding:0 0 8px}
+  body.youtube-active #now-playing .lyrics-lines{padding:45px 0 150px}
+  #youtube-dock{bottom:calc(145px + env(safe-area-inset-bottom));width:calc(100% - 32px);max-width:360px;right:16px;border-radius:12px}
+  #toast{font-size:13px;max-width:calc(100% - 32px)}
+}
+@media(max-width:640px) and (max-height:700px){
+  body #now-playing .np-top{margin-bottom:6px;min-height:40px}
+  body #now-playing .np-controls{min-height:48px;margin-top:6px!important}
+  body #now-playing .np-controls .play-button{width:48px;height:48px}
+  body #now-playing .np-meta{margin:12px 0!important;min-height:42px}
+  body.youtube-active #now-playing.lyrics-visible .np-stage{grid-template-rows:229px 40px minmax(64px,1fr) auto auto}
+  body #now-playing .lyric-line,body.youtube-active #now-playing .lyric-line{font-size:25px}
+  body.youtube-active #now-playing .lyrics-footer{display:none}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
