@@ -1,7 +1,7 @@
 'use strict';
 const PREFIX='echo-shell-'+new URL(self.registration.scope).pathname+'-';
-const CACHE=PREFIX+'v8';
-const SHELL=['./','index.html','style.css','spotify-theme.css','minimal.css','refined.css','fonts.css','config.js','vendor/supabase.js','account-service.js','media-transport.js','player-core.js','app.js','manifest.webmanifest','assets/disc-cover.svg','assets/icon.svg','assets/icon-192.png','assets/icon-512.png','assets/hero.jpg','assets/forest.jpg','assets/sea.jpg','assets/mountain.jpg','assets/night.jpg','assets/bloom.jpg','assets/city.jpg','assets/inter-0.ttf','assets/inter-1.ttf','assets/inter-2.ttf','assets/inter-3.ttf'];
+const CACHE=PREFIX+'v9';
+const SHELL=['./','index.html','style.css','spotify-theme.css','minimal.css','refined.css','fonts.css','config.js','vendor/supabase.js','music-library.js','account-service.js','social.js','media-transport.js','player-core.js','app.js','manifest.webmanifest','assets/disc-cover.svg','assets/icon.svg','assets/icon-192.png','assets/icon-512.png','assets/hero.jpg','assets/forest.jpg','assets/sea.jpg','assets/mountain.jpg','assets/night.jpg','assets/bloom.jpg','assets/city.jpg','assets/inter-0.ttf','assets/inter-1.ttf','assets/inter-2.ttf','assets/inter-3.ttf'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith(PREFIX)&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

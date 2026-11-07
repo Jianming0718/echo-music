@@ -24,6 +24,27 @@ class EchoAccountService extends EventTarget {
   async acceptFriend(id){this.requireUser();const {error}=await this.client.from('friendships').update({status:'accepted'}).eq('id',id);if(error)throw error}
   async removeFriend(id){this.requireUser();const {error}=await this.client.from('friendships').delete().eq('id',id);if(error)throw error}
   async sharedPlaylists(personId){this.requireUser();const {data,error}=await this.client.from('playlists').select('*,playlist_items(*)').eq('user_id',personId).eq('visibility','friends');if(error)throw error;return data||[]}
+  async messages(personId,cursor=null){
+    const uid=this.requireUser();
+    const {data,error}=await this.client.rpc('read_friend_messages',{other_user:personId,before_time:cursor?.created_at||null,before_id:cursor?.id||null});
+    if(error)throw new Error(error.code==='42501'?'好友关系已结束，无法读取聊天。':error.message);
+    if(this.user?.id!==uid)throw new Error('登录状态已改变。');
+    return data||[];
+  }
+  async sendMessage(personId,body='',track=null,messageId=crypto.randomUUID()){
+    const uid=this.requireUser(),text=String(body).trim(),music=track?EchoMusicLibrary.share(track):null;
+    if(text.length>2000||(!text&&!music))throw new Error('请输入消息或选择歌曲。');
+    if(track&&!music)throw new Error('这首歌曲暂不支持直接分享。');
+    const row={id:messageId,sender_id:uid,recipient_id:personId,body:text,track:music};
+    let {data,error}=await this.client.from('messages').insert(row).select().single();
+    if(error?.code==='23505'){
+      const existing=await this.client.from('messages').select('*').eq('id',messageId).eq('sender_id',uid).eq('recipient_id',personId).single();
+      if(!existing.error){data=existing.data;error=null}
+    }
+    if(error)throw new Error(error.code==='42501'?'双方确认好友后才能发送消息。':error.message);
+    if(this.user?.id!==uid)throw new Error('登录状态已改变。');
+    return data;
+  }
   async deleteAccount(){const id=this.requireUser();const {error}=await this.client.rpc('delete_my_account');if(error)throw error;this.dispatchEvent(new CustomEvent('deleted',{detail:{id}}));await this.client.auth.signOut({scope:'local'})}
 }
 globalThis.EchoAccountService=EchoAccountService;

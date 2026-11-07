@@ -22,8 +22,8 @@ function fixture({config={},fetcher,videoReadyDelay=0,width=390}={}){
   getVideoData(){return this.data}getPlayerState(){return this.state}getDuration(){return 180}getCurrentTime(){return this.time}getPlaybackRate(){return 1}setVolume(){}seekTo(time){this.time=time}destroy(){}
  }};
  w.ECHO_CONFIG=config;
- for(const name of ['account-service.js','media-transport.js','player-core.js'])w.eval(fs.readFileSync(root+'/'+name,'utf8'));
- w.eval(fs.readFileSync(root+'/app.js','utf8')+';window.echoTest={player,audio,parseLrc,cleanLyricTitle,bestLyricRecord,playYouTube,openNowPlaying,toggleLyrics,loadLyrics,showLyrics,syncLyrics,setView,getTrack,activeTrack,updateProgress,renderYouTubeResults,cloud};');
+ for(const name of ['music-library.js','account-service.js','media-transport.js','player-core.js'])w.eval(fs.readFileSync(root+'/'+name,'utf8'));
+ w.eval(fs.readFileSync(root+'/app.js','utf8')+';'+fs.readFileSync(root+'/social.js','utf8')+';window.echoTest={player,audio,parseLrc,cleanLyricTitle,bestLyricRecord,playYouTube,openNowPlaying,toggleLyrics,loadLyrics,showLyrics,syncLyrics,setView,getTrack,activeTrack,updateProgress,renderYouTubeResults,cloud,openChat,stopChat,chooseMusicFriend,sharedMusic,categoryForTrack};');
  return {dom,w,d,errors,videos,close:()=>w.close(),click(selector){const node=d.querySelector(selector);if(!node)throw Error('Missing '+selector);node.click()},search(term){const node=d.querySelector('#music-search');node.value=term;node.dispatchEvent(new w.Event('input',{bubbles:true}));d.querySelector('#music-search-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}))}};
 }
 module.exports={fixture,delay};

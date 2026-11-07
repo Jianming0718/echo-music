@@ -1,3 +1,4 @@
+function artworkCandidates(node,found=[]){if(!node||typeof node!=='object')return found;if(typeof node.url==='string')found.push(node);for(const value of Object.values(node)){if(Array.isArray(value))value.forEach(item=>artworkCandidates(item,found));else if(value&&typeof value==='object')artworkCandidates(value,found)}return found}
 const textOf = value => value?.simpleText || (value?.runs || []).map(run => run.text || '').join('');
 const videoPattern = /^[A-Za-z0-9_-]{11}$/;
 
@@ -22,9 +23,10 @@ export function parseMusicResults(payload) {
         const artist = artistRuns.map(run => run.text).join(' / ') || parts.find(part => !/^\d[\d:.,\s]*$/.test(part) && !/^(song|video|歌曲|影片|视频)$/i.test(part)) || 'YouTube Music';
         const durationText = [...runs, ...(item.fixedColumns || []).flatMap(column => column.musicResponsiveListItemFixedColumnRenderer?.text?.runs || [])].map(run => run.text?.trim()).find(value => /^\d{1,2}:\d{2}(?::\d{2})?$/.test(value || ''));
         const duration = durationText ? durationText.split(':').reduce((total, part) => total * 60 + Number(part), 0) : 0;
-        const thumbnails = item.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails || [];
-        const cover = thumbnails.at(-1)?.url;
-        if (title) songs.set(videoId, { videoId, title: title.slice(0, 300), artist: artist.slice(0, 300), duration, cover: /^https:\/\/(lh3\.googleusercontent\.com|i\.ytimg\.com|yt3\.ggpht\.com)\//.test(cover || '') ? cover : undefined });
+        const thumbnails = artworkCandidates(item.thumbnail||item.thumbnails).sort((a,b)=>(Number(b.width)||0)*(Number(b.height)||0)-(Number(a.width)||0)*(Number(a.height)||0));
+        const cover = thumbnails.find(image=>/^https:\/\/(lh[3-6]\.googleusercontent\.com|yt3\.googleusercontent\.com|i\.ytimg\.com|yt3\.ggpht\.com)\//.test(image.url))?.url;
+        const album = runs.find(run=>/^MPRE/.test(run.navigationEndpoint?.browseEndpoint?.browseId||''))?.text;
+        if (title) songs.set(videoId, { videoId, title: title.slice(0, 300), artist: artist.slice(0, 300), duration, ...(album?{album:album.slice(0,300)}:{}), cover: /^https:\/\/(lh[3-6]\.googleusercontent\.com|yt3\.googleusercontent\.com|i\.ytimg\.com|yt3\.ggpht\.com)\//.test(cover || '') ? cover : undefined });
       }
       return;
     }

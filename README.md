@@ -1,21 +1,22 @@
 # Echo
 
-现代简约 Web 音乐播放器。站内搜索来自 YouTube Music 的公开网页接口，播放使用 YouTube 官方嵌入播放器；也支持本机音频。邮箱账号、收藏、歌单和好友数据使用 Supabase。
+现代简约 Web 音乐播放器。站内搜索来自 YouTube Music 的公开网页接口，播放使用 YouTube 官方嵌入播放器；也支持本机音频。邮箱账号、收藏、歌单、好友聊天与歌曲分享使用 Supabase。
 
 ## 当前功能和接入状态
 
 - 手机三个主入口：音乐、搜索、资料库；收藏和好友在资料库。播放页、歌词页使用可伸缩布局和固定视频区域；同步歌词可点击跳转，支持手动滚动后恢复跟随、LRC 导入与偏移。
 - YouTube 链接播放不需要 YouTube Data API key。播放器始终可见，保留原生控制、品牌与广告；页面进入后台时暂停 YouTube 播放。
+- 界面中的搜索入口统一称为“音乐库”，歌曲列表显示分类；支持 K-pop、J-pop、华语、欧美、纯音乐等搜索范围，以及歌曲菜单手动分类。未知分类明确显示未分类；部分艺人分类使用维护的艺人名映射，不把所有搜索结果强行标为同一曲风。
 - 已部署站内 YouTube Music 搜索：输入歌曲或歌手，直接点结果播放。支持歌曲/视频筛选、分页、请求取消与失败重试。已实际验证 BTS、韩文 BLACKPINK 搜索、TWICE 视频搜索和下一页。此功能不需要用户粘贴链接或提供 YouTube Data API key。公开网页接口不属于官方稳定 API，可能随上游变化。
 - 已连接实际 Supabase Free 项目 `echo-music`，并应用账号数据库迁移。邮箱确认保持开启，私人收藏和好友歌单受 RLS 保护。面向公众开放邮箱注册前，还需要配置 Auth 站点/回跳地址和正式 SMTP 服务；尚未验证真实注册邮件。
-- GitHub Pages 部署工作流已提供。目标仓库为 https://github.com/Jianming0718/echo-music 。当前 GitHub 连接能读取仓库，但写入返回 403（Resource not accessible by integration），源码尚未上传，Pages 尚未上线。
+- 源码已上传 https://github.com/Jianming0718/echo-music ，GitHub Pages 已部署到 https://jianming0718.github.io/echo-music/ 。后续 main 分支推送由 Actions 自动发布。
 - YouTube 视频受发布者嵌入权限、地区和网络限制，不能保证每首音乐都能嵌入，也不提供广告移除、音频提取或离线下载。
 
 ## 本地运行
 
 直接运行 `python -m http.server 8000 --directory dist`，然后打开 `http://localhost:8000`。网站构建产物已包含，无需安装依赖即可预览。账号回调和 YouTube 播放正式部署请使用 HTTPS。
 
-如需重建第三方 SDK：`npm ci`，然后 `npm run vendor`。使用 Node.js 24 运行 `npm test`，可验证播放器核心、真实 PostgreSQL RLS 隔离、搜索接口和 DOM 交互回归；数据库测试使用本地 PGlite，不连接生产数据库。DOM 测试不等于真机浏览器测试，尚未验证 iPhone 真机锁屏与真实 YouTube 视频播放。
+如需重建第三方 SDK：`npm ci`，然后 `npm run vendor`。使用 Node.js 24 运行 `npm test`，可验证播放器核心、真实 PostgreSQL RLS 隔离、搜索接口和 DOM 交互回归；数据库测试使用本地 PGlite，不连接生产数据库；包括聊天权限、不可伪造发送者、消息时间与 ID 分页、撤销好友访问和账号删除级联。DOM 测试不等于真机浏览器测试，尚未验证 iPhone 真机锁屏与真实 YouTube 视频播放。
 
 ## 免费托管方案
 
@@ -45,13 +46,13 @@
 ### 配置 Supabase
 
 1. 创建 Supabase Free 项目，启用 Email/password 登录。
-2. 在 SQL Editor 执行 `supabase/migrations/20261107222638_echo_accounts.sql`。迁移建表、索引、函数和 RLS。已有生产数据库的迁移应按顺序管理，不重复修改已应用文件。
+2. 在 SQL Editor 执行 `supabase/migrations/20261107222638_echo_accounts.sql`，再执行 `20261107231948_friend_messages.sql`。迁移建表、索引、函数和 RLS。已有生产数据库的迁移应按顺序管理，不重复修改已应用文件。
 3. 保持邮箱确认开启，配置自定义 SMTP。Supabase 默认邮件服务只适合受限测试，不能视为任意公众注册的正式邮件服务。
 4. 配置站点 URL 和允许的注册/找回密码回调 URL。使用当前 Sites 预览时加入其站点 URL；迁移到 Pages 时加入 Pages URL。
 5. 把项目 URL 与 publishable/anon key 配置到构建变量。数据库角色限制和 RLS 必须保持启用。
 6. 用两个真实测试账号验证：确认邮件、登录、密码重设、好友请求、接受、好友歌单可见性、移除好友、账号删除。当前代码测试不会发送真实邮件或创建生产账号。
 
-数据表为 `profiles`、`likes`、`playlists`、`playlist_items` 和 `friendships`。密码和邮箱由 Supabase Auth 管理。用户名搜索只返回公开昵称、用户名与账号 ID。收藏为私有；歌单默认为私有，可明确改为好友可见；好友只读共享歌单，不能改写。只有接收方能接受申请。删除好友撤销共享读取权限。
+数据表为 `profiles`、`likes`、`playlists`、`playlist_items`、`friendships` 和 `messages`。密码和邮箱由 Supabase Auth 管理。用户名搜索只返回公开昵称、用户名与账号 ID。收藏为私有；歌单默认为私有，可明确改为好友可见；好友只读共享歌单，不能改写。只有接收方能接受申请。删除好友撤销共享读取权限。
 
 前端通过官方 Supabase JS SDK 管理会话，不自行保存明文密码。未完成的收藏/歌单同步进入按账号隔离的本机队列，恢复网络后重试。退出登录恢复访客资料。合并访客收藏和歌单需要用户在账号页主动选择。本机音频不上传，其他设备只会获得歌曲资料，必须导入对应文件后播放。
 
@@ -107,4 +108,15 @@ Auth 配置入口：
 
 正式主站可设为 `https://jianming0718.github.io/echo-music/`。允许回跳地址也应包含当前 Sites 地址 `https://echo-music-free-player.stablepeace1.chatgpt.site/`。保留邮箱确认，不通过关闭确认来绕过邮件配置。
 
-目标源码仓库：https://github.com/Jianming0718/echo-music 。仓库由所有者创建；当前连接缺少写入权限，尚未上传源码或部署 Pages。需要为该仓库授权 Contents 和 Workflows 写入后再推送。完整源码包包含部署工作流，解压后也可以由所有者直接推送。
+源码仓库：https://github.com/Jianming0718/echo-music 。主站：https://jianming0718.github.io/echo-music/ 。GitHub 授权和 Pages 设置已完成，后续代码推送触发自动发布；当前 Sites 站点也会继续更新。
+
+
+## 好友聊天与歌曲分享
+
+双方确认好友后可以打开聊天、发送文字或歌曲卡片，卡片可直接加入当前播放器播放。聊天支持加载更早记录、失败保留草稿、使用相同消息 ID 重试防止重复；未发送的草稿仅在内存中，不写入浏览器永久存储。聊天打开且页面可见时每 12 秒刷新，切换页面或退出账号后停止刷新；不展示虚构的在线状态或已读回执。
+
+`messages` 表启用 RLS，只允许已确认好友中的发送者或接收者读取。发送者必须是当前账号，时间由服务器生成，消息不可被客户端修改。聊天仅通过已授权 RPC 和带 RLS 的插入访问，不使用管理密钥。移除好友后双方不能继续读取或发送；旧记录保留在服务端，删除任一参与者账号时级联删除。分享的是歌曲资料，不复制音频；本机导入文件不能直接发送给好友。
+
+聊天界面转义文字和昵称，歌曲封面只接受允许的媒体域名和已知本机素材。歌曲分享只支持已识别的在线播放来源和内置授权曲目；不会按消息中的任意 URL 加载音频。当前已完成自动化数据库权限与 DOM 交互测试，未向真实好友发送测试消息，也没有完成两台真机账号联调。公开邮箱注册仍需运营者完成 SMTP 与 Auth 回调配置。
+
+最新数据库安全检查中，消息表 RLS 和调用者权限函数已确认开启；Auth 的泄露密码检测未启用，说明与配置入口：[Supabase password security](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)。不为该选项自动升级付费方案。
