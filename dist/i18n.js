@@ -1,6 +1,8 @@
 'use strict';
 (() => {
- const rows=`邮箱已确认，请登录。\tEmail verified. Please sign in.
+ const rows=`双方确认好友后才能操作。\tThis action requires a confirmed friendship.
+账号服务暂时不可用，请稍后重试。\tThe account service is unavailable. Please try again later.
+邮箱已确认，请登录。\tEmail verified. Please sign in.
 登录已过期，请重新登录。\tYour session expired. Please sign in again.
 请输入有效邮箱。\tEnter a valid email address.
 新密码需为 12–256 个字符。\tUse 12–256 characters for the new password.
