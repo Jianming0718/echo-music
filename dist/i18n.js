@@ -1,6 +1,77 @@
 'use strict';
 (() => {
- const rows=`邮箱已更新，请使用新邮箱重设密码后登录。\tEmail updated. Reset your password using the new email before signing in.
+ const rows=`正在更新兑换码…\tUpdating code…
+兑换码已更新\tCode updated
+兑换码已启用。\tThe code is enabled.
+兑换码已停用。\tThe code is disabled.
+更新未完成\tUpdate failed
+正在刷新账号资料…\tRefreshing account details…
+账号资料已刷新\tAccount details refreshed
+部分收藏仍待同步。\tSome favorites are still waiting to sync.
+账号和会员资料已更新。\tAccount and membership details have been updated.
+管理中心\tAdministration
+返回音乐\tBack to music
+请先登录管理员账号\tSign in with an administrator account
+正在确认管理员权限…\tChecking administrator access…
+仅管理员可访问\tAdministrators only
+正在处理…\tProcessing…
+操作成功\tSuccess
+操作未完成\tSomething went wrong
+完成\tDone
+返回重试\tBack to retry
+正在登录…\tSigning in…
+正在创建账号…\tCreating your account…
+正在提交重设请求…\tRequesting a reset…
+正在修改密码…\tChanging your password…
+正在重设密码…\tResetting your password…
+注册成功\tRegistration complete
+账号已创建，可以开始听歌。\tYour account is ready. Enjoy your music.
+请检查邮箱\tCheck your email
+请打开邮箱中的确认链接完成注册。已有账号可以直接登录。\tOpen the confirmation link in your email to finish registering. If you already have an account, sign in.
+登录成功\tSigned in
+欢迎回来，你的音乐已准备就绪。\tWelcome back. Your music is ready.
+继续听歌\tContinue listening
+密码已修改\tPassword changed
+密码已重设\tPassword reset
+下次登录请使用新密码。\tUse your new password the next time you sign in.
+正在保存资料…\tSaving your profile…
+资料已保存\tProfile saved
+账号资料已更新。\tYour account profile has been updated.
+登录未完成\tSign-in failed
+注册未完成\tRegistration failed
+请求未完成\tRequest failed
+修改未完成\tChange failed
+重设未完成\tReset failed
+保存未完成\tSave failed
+正在退出登录…\tSigning out…
+已退出登录\tSigned out
+正在删除账号…\tDeleting your account…
+账号已删除\tAccount deleted
+正在移除头像…\tRemoving your photo…
+头像已移除\tPhoto removed
+正在处理并上传头像…\tProcessing and uploading your photo…
+头像已更新\tPhoto updated
+正在兑换…\tRedeeming your code…
+正在生成兑换码…\tGenerating codes…
+兑换已完成\tCode already redeemed
+兑换成功\tCode redeemed
+兑换码已成功兑换，Premium 已更新。\tYour code was successfully redeemed. Premium has been updated.
+查看会员\tView membership
+兑换码已生成\tCodes generated
+继续查看并保存本次生成的兑换码。\tContinue to view and save your new codes.
+查看兑换码\tView codes
+兑换未完成\tRedemption failed
+生成未完成\tGeneration failed
+正在保存用户资料…\tSaving user details…
+用户资料已保存\tUser saved
+会员和账号资料已更新。\tMembership and account details have been updated.
+继续管理\tContinue managing
+新邮箱需通过重设密码完成验证。\tReset the password to verify the new email.
+正在发送重设邮件…\tSending reset email…
+重设邮件已发送\tReset email sent
+请让该用户检查邮箱并按链接重设密码。\tAsk the user to check their email and follow the link to reset their password.
+发送未完成\tEmail request failed
+邮箱已更新，请使用新邮箱重设密码后登录。\tEmail updated. Reset your password using the new email before signing in.
 兑换码仅保存哈希；生成者需自行保存完整兑换码。兑换记录保存用户编号、会员天数和到期时间。删除账号后会移除记录中的用户编号，并保留匿名使用次数以防止兑换码超额使用。管理员可修改账号资料、会员及角色；修改邮箱会撤销现有会话，并要求通过新邮箱重设密码。\tOnly hashes of redemption codes are stored. Creators must save the full codes themselves. Claims store account IDs, granted days and expiry times. Deleting an account removes its ID from claims while retaining anonymous usage counts to enforce limits. Administrators can edit accounts, membership and roles. Email changes revoke existing sessions and require a password reset through the new email.
 可编辑邮箱、会员、账号状态、角色和头像。系统编号及注册时间只读。\tEdit email, membership, account status, role and photo. Account IDs and registration times are read-only.
 更新账号服务至版本 5 后可编辑会员和邮箱。\tUpdate the account service to version 5 to edit membership and email.
