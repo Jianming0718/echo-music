@@ -1,6 +1,6 @@
 # Echo Apps Script version 3
 
-Version 3 is active for the current Echo project. Website version 0.9.1 uses Apps Script and private Google Sheets for password authentication and account data. The operator is `admin` in Users. Original account IDs are retained and existing users set a new password through email. Supabase account-data access and legacy Edge entrypoints are closed; avatar storage and music-search/artist functions remain available. The old database is a restricted migration archive, not the live account database.
+Version 3 is active for the current Echo project. The current website uses Apps Script and private Google Sheets for password authentication and account data. The operator is `admin` in Users. Original account IDs are retained and existing users set a new password through email. Supabase account-data access and legacy Edge entrypoints are closed; avatar storage and music-search/artist functions remain available. The old database is a restricted migration archive, not the live account database.
 
 Private management sheet: https://docs.google.com/spreadsheets/d/1mn55LJ8osh3hMM9SANLTb3OgT8iNCtQt8vaSsuiqZ0U/edit
 
@@ -70,3 +70,7 @@ Migration `echo_sheets_cutover_guard` adds a private operator-controlled state a
 The state table intentionally has RLS enabled without listener policies or grants; only the operator and security-definer helpers access it. The corresponding informational Supabase advisor is expected. The existing Supabase Auth leaked-password-protection warning relates to the retired authentication service: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 
 Rollback requires a deliberate frontend/backend coordination and restoration of the old Edge entrypoints as well as reopening the private state. Do not reopen the old store while clients write to Sheets. Archived records are retained pending new-service verification, and are not silently deleted.
+
+## Branded email bodies
+
+The live EmailTemplates rows use the complete HTML from the repository’s `emails` directory. Header images are the original theme wordmarks hosted on public GitHub Pages. The footer displays admin@echomusic.com and links to mailto:admin.echomusic@gmail.com; Reply-To uses the Gmail address. Subjects and enabled flags are preserved when updating template bodies. These live sheet edits apply immediately; no Apps Script deployment or real test email is required for a branding update.

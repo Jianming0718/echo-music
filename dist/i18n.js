@@ -1,6 +1,7 @@
 'use strict';
 (() => {
- const rows=`原有账号已迁移，请先通过「忘记密码」设置新密码。\tExisting accounts have moved. Use Forgot password to set your new password first.
+ const rows=`返回\tBack
+原有账号已迁移，请先通过「忘记密码」设置新密码。\tExisting accounts have moved. Use Forgot password to set your new password first.
 如果邮箱已注册，会收到重设密码的邮件。链接有效期为 30 分钟，仅可使用一次。\tIf the email is registered, a password-reset message will arrive. The link expires in 30 minutes and works once.
 邮箱密码登录、邮箱验证、密码修改和重设由 Apps Script 处理。账号和密码哈希保存在运营者的私有 Google Sheet，密码明文不会写入表格，会话和重设令牌只保存哈希。原有用户 ID 保持不变，首次使用迁移后的账号需通过邮件设置新密码。\tApps Script handles email/password sign-in, email verification, password changes and recovery. Accounts and password hashes are stored in the operator’s private Google Sheet. Plaintext passwords are never written to the workbook; only hashes of session and recovery tokens are stored. Existing user IDs stay the same. Existing users set a new password by email for their first sign-in after migration.
 收藏、歌单、好友关系、聊天文字和歌曲资料保存在运营者私有 Google Sheet，通过已认证的 Apps Script 接口访问。好友只能读取明确共享的歌单和双方聊天；移除好友撤销访问。聊天没有端到端加密，运营者可访问私有管理表。草稿只在页面内存中保存，歌曲卡片不复制音频，本机文件不能直接发送给好友。旧数据库仅保留限制访问的迁移归档，待新服务核验完成后由运营者处理归档保留与删除。\tThe operator’s private Google Sheet stores favorites, playlists, friendships, messages and song metadata behind authenticated Apps Script endpoints. Friends can read only explicitly shared playlists and mutual chats; removing a friend revokes access. Chats are not end-to-end encrypted and the operator can access the workbook. Drafts stay in page memory, song cards do not copy audio, and local files cannot be sent directly. The old database remains a restricted migration archive; the operator will manage its retention and deletion after the new service is verified.

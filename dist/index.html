@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hans" data-echo-release="0.9.1">
+<html lang="zh-Hans" data-echo-release="0.10.0">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -8,15 +8,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Echo</title>
-<script src="appearance.js?v=0.9.1"></script>
-<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="assets/icon-192.png">
+<script src="appearance.js?v=0.10.0"></script>
+<link rel="icon" href="assets/brand/Logo_Lighttheme.png" type="image/png" sizes="1750x1750">
+<link rel="apple-touch-icon" href="assets/brand/Logo_Lighttheme.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=0.9.1">
-<link rel="stylesheet" href="spotify-theme.css?v=0.9.1">
-<link rel="stylesheet" href="minimal.css?v=0.9.1">
-<link rel="stylesheet" href="refined.css?v=0.9.1">
-<link rel="stylesheet" href="appearance.css?v=0.9.1">
+<link rel="stylesheet" href="style.css?v=0.10.0">
+<link rel="stylesheet" href="spotify-theme.css?v=0.10.0">
+<link rel="stylesheet" href="minimal.css?v=0.10.0">
+<link rel="stylesheet" href="refined.css?v=0.10.0">
+<link rel="stylesheet" href="appearance.css?v=0.10.0">
 </head>
 <body>
 <svg class="svg-defs" aria-hidden="true"><defs>
@@ -82,7 +82,7 @@
 <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol>
 </defs></svg>
 <aside class="sidebar">
-<a class="brand" href="#" aria-label="Echo home"><span class="brand-mark"><svg><use href="#i-disc"/></svg></span>echo<span class="brand-dot">.</span></a>
+<a class="brand" href="#" aria-label="Echo home"><img class="brand-logo logo-dark" src="assets/brand/Echo_Darktheme.png" width="1750" height="606" alt=""><img class="brand-logo logo-light" src="assets/brand/Echo_Lighttheme.png" width="1750" height="606" alt=""></a>
 
 <nav class="side-nav" aria-label="Main navigation">
 <button class="nav-item active" data-view="discover"><svg><use href="#i-disc"/></svg>音乐</button>
@@ -97,7 +97,7 @@
 </aside>
 <div class="workspace">
 <header class="topbar"><h1 id="page-title" class="page-title">音乐</h1>
-<a class="brand mobile-brand" href="#"><span class="brand-mark"><svg><use href="#i-disc"/></svg></span>echo<span class="brand-dot">.</span></a>
+<a class="brand mobile-brand" href="#" aria-label="Echo home"><img class="brand-logo logo-dark" src="assets/brand/Echo_Darktheme.png" width="1750" height="606" alt=""><img class="brand-logo logo-light" src="assets/brand/Echo_Lighttheme.png" width="1750" height="606" alt=""></a>
 <div class="top-actions"><button class="account-button" id="account-btn">登录</button><button class="icon-btn" id="settings-btn" aria-label="设置"><svg><use href="#i-settings"/></svg></button></div>
 </header>
 <main id="main" tabindex="-1"></main>
@@ -120,20 +120,20 @@
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="youtube-engine" class="media-engine" aria-hidden="true" inert><div id="youtube-player"></div></div>
 <audio id="audio" playsinline webkit-playsinline preload="metadata" src="assets/sanctuary.mp3"></audio>
-<script src="config.js?v=0.9.1" defer></script>
-<script src="vendor/supabase.js?v=0.9.1" defer></script>
-<script src="i18n.js?v=0.9.1" defer></script>
-<script src="music-library.js?v=0.9.1" defer></script>
-<script src="artwork.js?v=0.9.1" defer></script>
-<script src="profile-photo.js?v=0.9.1" defer></script>
-<script src="account-service.js?v=0.9.1" defer></script>
-<script src="sheets-account-service.js?v=0.9.1" defer></script>
-<script src="media-transport.js?v=0.9.1" defer></script>
-<script src="player-core.js?v=0.9.1" defer></script>
-<script src="ad-skip-bridge.js?v=0.9.1" defer></script>
-<script src="artist-service.js?v=0.9.1" defer></script>
-<script src="admin-users.js?v=0.9.1" defer></script>
-<script src="app.js?v=0.9.1" defer></script>
-<script src="social.js?v=0.9.1" defer></script>
+<script src="config.js?v=0.10.0" defer></script>
+<script src="vendor/supabase.js?v=0.10.0" defer></script>
+<script src="i18n.js?v=0.10.0" defer></script>
+<script src="music-library.js?v=0.10.0" defer></script>
+<script src="artwork.js?v=0.10.0" defer></script>
+<script src="profile-photo.js?v=0.10.0" defer></script>
+<script src="account-service.js?v=0.10.0" defer></script>
+<script src="sheets-account-service.js?v=0.10.0" defer></script>
+<script src="media-transport.js?v=0.10.0" defer></script>
+<script src="player-core.js?v=0.10.0" defer></script>
+<script src="ad-skip-bridge.js?v=0.10.0" defer></script>
+<script src="artist-service.js?v=0.10.0" defer></script>
+<script src="admin-users.js?v=0.10.0" defer></script>
+<script src="app.js?v=0.10.0" defer></script>
+<script src="social.js?v=0.10.0" defer></script>
 </body>
 </html>
