@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),{fixture,delay}=require('./ui-fixture.cjs');
 const uid='11111111-1111-4111-8111-111111111111';
-function styles(f){for(const name of ['style.css','spotify-theme.css','minimal.css','refined.css','appearance.css','community.css']){const node=f.d.createElement('style');node.textContent=fs.readFileSync(new URL('../dist/'+name,'file://'+__filename),'utf8');f.d.head.append(node)}}
+function styles(f){for(const name of ['style.css','spotify-theme.css','minimal.css','refined.css','appearance.css','community.css','interaction.css']){const node=f.d.createElement('style');node.textContent=fs.readFileSync(new URL('../dist/'+name,'file://'+__filename),'utf8');f.d.head.append(node)}}
 function rgba(value){const parts=value.match(/[\d.]+/g)?.map(Number);assert(parts?.length>=3,'Unresolved color '+value);return [...parts.slice(0,3),parts[3]??1]}
 function blend(front,back){return front.slice(0,3).map((n,i)=>n*front[3]+back[i]*(1-front[3]))}
 function background(f,node){if(!node)return [255,255,255];const color=rgba(f.w.getComputedStyle(node).backgroundColor);return blend(color,background(f,node.parentElement))}

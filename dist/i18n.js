@@ -1,6 +1,7 @@
 'use strict';
 (() => {
- const rows=`正在更新兑换码…\tUpdating code…
+ const rows=`账号暂停\tAccount suspended
+正在更新兑换码…\tUpdating code…
 兑换码已更新\tCode updated
 兑换码已启用。\tThe code is enabled.
 兑换码已停用。\tThe code is disabled.
@@ -728,10 +729,10 @@ Echo 首页\tEcho home
  function applyAttributes(element){if(protectedNode(element)&&!element.matches('input,textarea'))return;let records=attributeRecords.get(element);if(!records){records={};attributeRecords.set(element,records)}for(const name of ['aria-label','title','alt'])if(element.hasAttribute(name)){const value=element.getAttribute(name);let record=records[name];if(!record||value!==record.last)record={source:value,last:value};const result=translate(record.source);record.last=result;records[name]=record;if(result!==value)element.setAttribute(name,result)}}
  let observer;
  function localize(root=document.body){if(!root)return;observer?.disconnect();if(root.nodeType===3)applyText(root);else if(root.nodeType===1||root.nodeType===9){if(root.nodeType===1)applyAttributes(root);root.querySelectorAll('[aria-label],[title],[alt]').forEach(applyAttributes);const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(walker.nextNode())applyText(walker.currentNode)}observe()}
- function observe(){if(observer&&document.body)observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-label','title','alt']})}
+ function observe(){if(observer&&document.body)observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeOldValue:true,attributeFilter:['aria-label','title','alt']})}
  const privacyPage=document.title==='隐私说明 · Echo';
  function setLanguage(value){language=value==='en'?'en':'zh-CN';try{localStorage.setItem('echo-language',language)}catch{}document.documentElement.lang=language==='en'?'en':'zh-Hans';if(privacyPage)document.title=translate('隐私说明 · Echo');localize();const picker=document.querySelector('#language-setting');if(picker)picker.value=language;document.dispatchEvent(new CustomEvent('echo:languagechange',{detail:{language}}))}
  globalThis.EchoI18n=Object.freeze({t:translate,localize,setLanguage,get language(){return language},get locale(){return language==='en'?'en-US':'zh-CN'}});
- observer=new MutationObserver(records=>{const roots=new Set(records.map(record=>record.target));for(const root of roots)if(root.isConnected)localize(root)});
+ observer=new MutationObserver(records=>{const roots=new Set();for(const record of records){if(record.type==='childList'){for(const node of record.addedNodes)roots.add(node)}else if(record.type!=='attributes'||record.oldValue!==record.target.getAttribute(record.attributeName))roots.add(record.target)}for(const root of roots){if(!root.isConnected)continue;let parent=root.parentNode;while(parent&&!roots.has(parent))parent=parent.parentNode;if(!parent)localize(root)}});
  document.documentElement.lang=language==='en'?'en':'zh-Hans';if(privacyPage)document.title=translate('隐私说明 · Echo');localize();
 })();
