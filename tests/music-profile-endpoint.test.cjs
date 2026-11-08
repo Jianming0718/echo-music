@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict'),path=require('node:path'),vm=require('node:vm'),esbuild=require('esbuild');
+const bundle=esbuild.buildSync({entryPoints:[path.join(__dirname,'../supabase/functions/music-profile/index.ts')],bundle:true,write:false,platform:'neutral',format:'iife',target:'es2022'}).outputFiles[0].text;
+let handler;const requests=[],artistId='UCkX4rp22PPv7V6PKXD7zZFg';
+const sandbox={Request,Response,URL,AbortSignal,Map,Set,Date,JSON,console,Deno:{env:{get:()=> 'https://project.example'},serve:fn=>handler=fn},fetch:async(url,options)=>{url=String(url);requests.push({url,options});if(url.includes('/auth/v1/settings'))return Response.json({});if(url.includes('youtubei/v1/browse'))return Response.json({header:{musicImmersiveHeaderRenderer:{title:{runs:[{text:'Jin'}]}}},contents:[{musicDescriptionShelfRenderer:{description:{runs:[{text:'Provider biography'}]}}}]});if(url.startsWith('https://itunes.apple.com/'))return Response.json({results:[]});throw Error('Unexpected destination')}};
+vm.runInNewContext(bundle,sandbox);
+const call=(body,headers={})=>handler(new Request('https://project.example/functions/v1/music-profile',{method:'POST',headers:{Origin:'https://jianming0718.github.io','Content-Type':'application/json',apikey:'sb_publishable_test',...headers},body:JSON.stringify(body)}));
+(async()=>{
+ assert.equal((await call({action:'artist',artistId},{Origin:'https://attacker.test'})).status,403);
+ assert.equal((await call({action:'artist',artistId},{apikey:''})).status,401);
+ assert.equal((await call({action:'artist',artistId},{apikey:'sb_secret_must_not_be_accepted'})).status,401);
+ assert.equal((await call({action:'release',releaseId:'https://attacker.test/audio'})).status,400);
+ assert.equal((await call({action:'artist',artistId:'invalid'})).status,400);
+ assert.equal((await call({action:'artist',artist:'Jin\nInjected'})).status,400);
+ assert.equal((await call({action:'artist',artistId,admin:true})).status,400);
+ const response=await call({action:'artist',artistId});assert.equal(response.status,200);assert.equal(response.headers.get('Access-Control-Allow-Origin'),'https://jianming0718.github.io');const result=await response.json();assert.equal(result.profile.name,'Jin');assert.equal(result.profile.id,artistId);assert.equal(result.profile.description,'Provider biography');const count=requests.length;assert.equal((await call({action:'artist',artistId})).status,200);assert.equal(requests.length,count);
+ const options=await handler(new Request('https://project.example/functions/v1/music-profile',{method:'OPTIONS',headers:{Origin:'https://jianming0718.github.io'}}));assert.equal(options.status,204);
+ let limited;for(let i=0;i<25;i++)limited=await call({action:'artist',artistId},{'x-forwarded-for':'rate-test'});assert.equal(limited.status,429);
+ assert(requests.every(item=>item.url.startsWith('https://project.example/auth/')||item.url.startsWith('https://music.youtube.com/youtubei/')||item.url.startsWith('https://itunes.apple.com/')));
+ console.log('PASS artist endpoint validates project keys, origins and resource IDs, rejects arbitrary URLs and extra fields, caches public profiles, and limits requests');
+})().catch(error=>{console.error(error);process.exit(1)});

@@ -334,6 +334,44 @@ Audius 热门\tTrending on Audius
 音乐库响应超时，请重试。\tThe music catalog took too long to respond. Please try again.
 请求过多，请稍后重试。\tAudius is receiving too many requests. Please try again shortly.
 此分享歌曲暂不可用。\tThis shared song is unavailable.
+歌手资料加载超时，请重试。\tArtist information timed out. Please try again.
+界面图标来自\tInterface icons by
+（ISC 许可）。\t(ISC license).
+外观偏好\tAppearance preferences
+主题与动态背景偏好只保存在本机。动态背景启用时会尝试读取封面配色，读取失败时使用本地配色，不上传照片或音频。\tTheme and animated background preferences stay on this device. When enabled, the background attempts to sample album artwork colors and falls back to a local palette. No photos or audio are uploaded.
+歌手与发行作品资料使用 YouTube Music；精确发行日期仅在 iTunes 记录明确匹配时显示。查询会发送歌手或作品名称，不上传音频文件。仅有年份的记录不会补出月份和日期。\tArtist and release information comes from YouTube Music. Exact release dates appear only when iTunes records match unambiguously. Queries send artist or release names, not audio files. Year-only records do not acquire invented months or days.
+外观\tAppearance
+深色\tDark
+浅色\tLight
+动态背景（实验性）\tAnimated background (experimental)
+查看歌手\tView artist
+歌手资料服务尚未连接。\tThe artist information service is not connected.
+暂未找到这位歌手的资料。\tNo profile was found for this artist.
+请求较多，请稍后重试。\tToo many requests. Please try again shortly.
+歌手资料暂时不可用，请重试。\tArtist information is unavailable. Please try again.
+歌手资料格式异常。\tThe artist information response was invalid.
+发行作品资料不匹配。\tThe release information did not match.
+无效的发行作品。\tInvalid release.
+发行作品\tReleases
+正在加载歌手资料…\tLoading artist information…
+暂无歌手简介\tNo artist biography available
+单曲与 EP\tSingles and EPs
+暂未查到此类发行作品。\tNo releases of this type were found.
+当前歌曲\tCurrent song
+在音乐库搜索歌手\tSearch this artist in the music library
+查看歌手页面\tView artist page
+返回歌手\tBack to artist
+正在加载发行作品…\tLoading release…
+发行年份\tRelease year
+发行日期\tRelease date
+暂无发行日期\tRelease date unavailable
+播放全部\tPlay all
+该发行作品暂无可播放曲目。\tNo playable tracks are available for this release.
+查看发行作品页面\tView release page
+日期资料\tDate source
+发行作品暂时不可用\tRelease unavailable
+请稍后重试。\tPlease try again shortly.
+取消静音\tUnmute
 Safari 广告跳过\tSafari ad skipping
 安装与状态\tSetup and status
 需要免费的 Userscripts Safari 扩展，普通网页无法自行取得这项权限。\tRequires the free Userscripts Safari extension. A webpage cannot grant itself these permissions.

@@ -3,9 +3,10 @@ const {indexedDB}=require('fake-indexeddb');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.join(__dirname,'../dist');
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function fixture({config={},fetcher,videoReadyDelay=0,width=390,autoStart=true,storage={}}={}){
+function fixture({config={},fetcher,videoReadyDelay=0,width=390,autoStart=true,storage={},reducedMotion=false}={}){
  const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(fs.readFileSync(root+'/index.html','utf8'),{url:'https://echo.test/echo/',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc}),w=dom.window,d=w.document;
+ const motionListeners=new Set();const motionQuery={matches:reducedMotion,addEventListener:(type,fn)=>motionListeners.add(fn),removeEventListener:(type,fn)=>motionListeners.delete(fn)};w.matchMedia=query=>query.includes('prefers-reduced-motion')?motionQuery:{matches:false,addEventListener:()=>{},removeEventListener:()=>{}};
  Object.defineProperty(w,'innerWidth',{value:width});w.indexedDB=indexedDB;w.CSS={escape:x=>x};w.scrollTo=()=>{};w.HTMLElement.prototype.scrollTo=function(options){this.scrollTop=options.top||0};
  for(const name of ['show','showModal'])w.HTMLDialogElement.prototype[name]=function(){this.open=true};
  w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'))};
@@ -23,10 +24,10 @@ function fixture({config={},fetcher,videoReadyDelay=0,width=390,autoStart=true,s
   pauseVideo(){this.state=2;this.options.events.onStateChange({data:2})}
   getVideoData(){return this.data}getPlayerState(){return this.state}getDuration(){return 180}getCurrentTime(){return this.time}getPlaybackRate(){return 1}setVolume(){}seekTo(time){this.time=time}destroy(){}
  }};
- for(const [key,value]of Object.entries(storage))w.localStorage.setItem('echo-'+key,key==='language'?String(value):JSON.stringify(value));
+ for(const [key,value]of Object.entries(storage))w.localStorage.setItem('echo-'+key,['language','theme'].includes(key)?String(value):JSON.stringify(value));
  w.ECHO_CONFIG=config;
- for(const name of ['i18n.js','music-library.js','artwork.js','profile-photo.js','account-service.js','media-transport.js','player-core.js','ad-skip-bridge.js'])w.eval(fs.readFileSync(root+'/'+name,'utf8'));
+ for(const name of ['appearance.js','i18n.js','music-library.js','artwork.js','profile-photo.js','account-service.js','media-transport.js','player-core.js','ad-skip-bridge.js','artist-service.js'])w.eval(fs.readFileSync(root+'/'+name,'utf8'));
  w.eval(fs.readFileSync(root+'/app.js','utf8').replace(/\ninit\(\);\s*$/, '\nwindow.echoAppReady=init();')+';'+fs.readFileSync(root+'/social.js','utf8')+';window.echoTest={player,audio,parseLrc,cleanLyricTitle,bestLyricRecord,playYouTube,openNowPlaying,toggleLyrics,loadLyrics,showLyrics,syncLyrics,setView,getTrack,activeTrack,updateProgress,renderYouTubeResults,cloud,openChat,stopChat,chooseMusicFriend,sharedMusic,categoryForTrack,accountPanel,receiveAccount,registerCloudTrack,playTrack,setAccountMode:mode=>{accountMode=mode;accountPanel()}};');
- return {dom,w,d,errors,videos,ready:()=>w.echoAppReady,close:()=>w.close(),click(selector){const node=d.querySelector(selector);if(!node)throw Error('Missing '+selector);node.click()},search(term){const node=d.querySelector('#music-search');node.value=term;node.dispatchEvent(new w.Event('input',{bubbles:true}));d.querySelector('#music-search-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}))}};
+ return {dom,w,d,errors,videos,ready:()=>w.echoAppReady,setReducedMotion(value){motionQuery.matches=value;motionListeners.forEach(fn=>fn({matches:value}))},close:()=>w.close(),click(selector){const node=d.querySelector(selector);if(!node)throw Error('Missing '+selector);node.click()},search(term){const node=d.querySelector('#music-search');node.value=term;node.dispatchEvent(new w.Event('input',{bubbles:true}));d.querySelector('#music-search-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}))}};
 }
 module.exports={fixture,delay};

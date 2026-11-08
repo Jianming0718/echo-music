@@ -25,8 +25,11 @@ export function parseMusicResults(payload) {
         const duration = durationText ? durationText.split(':').reduce((total, part) => total * 60 + Number(part), 0) : 0;
         const thumbnails = artworkCandidates(item.thumbnail||item.thumbnails).sort((a,b)=>(Number(b.width)||0)*(Number(b.height)||0)-(Number(a.width)||0)*(Number(a.height)||0));
         const cover = thumbnails.find(image=>/^https:\/\/(lh[3-6]\.googleusercontent\.com|yt3\.googleusercontent\.com|i\.ytimg\.com|yt3\.ggpht\.com)\//.test(image.url))?.url;
-        const album = runs.find(run=>/^MPRE/.test(run.navigationEndpoint?.browseEndpoint?.browseId||''))?.text;
-        if (title) songs.set(videoId, { videoId, title: title.slice(0, 300), artist: artist.slice(0, 300), duration, ...(album?{album:album.slice(0,300)}:{}), cover: /^https:\/\/(lh[3-6]\.googleusercontent\.com|yt3\.googleusercontent\.com|i\.ytimg\.com|yt3\.ggpht\.com)\//.test(cover || '') ? cover : undefined });
+        const albumRun = runs.find(run=>/^MPRE/.test(run.navigationEndpoint?.browseEndpoint?.browseId||''));
+        const album = albumRun?.text;
+        const albumId = albumRun?.navigationEndpoint?.browseEndpoint?.browseId;
+        const artists = [...new Map(artistRuns.filter(run=>/^UC[A-Za-z0-9_-]{22}$/.test(run.navigationEndpoint?.browseEndpoint?.browseId||'')).map(run=>[run.navigationEndpoint.browseEndpoint.browseId,{id:run.navigationEndpoint.browseEndpoint.browseId,name:run.text}])).values()];
+        if (title) songs.set(videoId, { videoId, title: title.slice(0, 300), artist: artist.slice(0, 300), duration, ...(artists.length?{artistId:artists[0].id,artists}:{}), ...(/^MPRE[A-Za-z0-9_-]{8,180}$/.test(albumId||'')?{albumId}:{}), ...(album?{album:album.slice(0,300)}:{}), cover: /^https:\/\/(lh[3-6]\.googleusercontent\.com|yt3\.googleusercontent\.com|i\.ytimg\.com|yt3\.ggpht\.com)\//.test(cover || '') ? cover : undefined });
       }
       return;
     }

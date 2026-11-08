@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.audio-resolve]
 verify_jwt = true
+
+[functions.music-profile]
+verify_jwt = false
