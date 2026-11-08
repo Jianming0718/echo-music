@@ -31,3 +31,11 @@ Live validation returned Jin's biography, five albums, ten singles/EPs, and play
 ## Validation limits
 
 Automated tests cover stored theme choices, motion visibility and reduced-motion behavior, stale artwork sampling, synchronized volume, official icon provenance, scroll retention, profile and release navigation, date precision, request validation, caching, and preservation of playback and private account features. Live metadata requests were verified. Browser-control tooling and a physical iPhone are unavailable in the current environment, so visual layout, device playback restrictions, and actual iPhone volume need device verification.
+
+## 0.11.1 contrast and membership update
+
+Light-theme selected titles and active player buttons override the original dark-theme accent rules. Secondary text uses a darker neutral; chat, song cards, profile notices and lyrics have explicit light-theme colors. Regression checks measure computed text/background contrast for the selected row, metadata, controls, settings and Premium card.
+
+The optional animated background uses a more varied sampled palette, faster 12/17-second gradient cycles, stronger color opacity and wider movement. A foreground veil keeps text readable. Cover sampling selects visibly different color buckets and derives complementary accents for nearly monochrome art. Existing opt-in, pause, visibility and reduced-motion behavior remains.
+
+Account membership appears in a separate bordered card in both themes. A valid backend premium_until timestamp is shown with the browser’s local time zone and interface language. Missing or invalid expiry is explicit, and an expired timestamp is marked expired without changing the entitlement object or granting permissions. Refresh account data updates the card while an unrelated open panel is preserved. No account data, membership dates or Apps Script code were changed.

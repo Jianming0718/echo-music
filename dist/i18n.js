@@ -1,6 +1,14 @@
 'use strict';
 (() => {
- const rows=`返回听歌房，正在跟随\tReturn to room, following the host
+ const rows=`会员状态\tMembership
+会员资料待刷新\tMembership status unavailable
+Premium 已到期\tPremium expired
+到期时间\tExpires
+到期时间暂不可用\tExpiration date unavailable
+未设置到期时间\tNo expiration date set
+刷新账号资料后显示会员状态\tRefresh your account to load membership status
+当前为免费账号\tYou are on a free account
+返回听歌房，正在跟随\tReturn to room, following the host
 社交与互动\tSocial and interaction
 音乐动态\tMusic feed
 歌曲弹幕\tSong comments
