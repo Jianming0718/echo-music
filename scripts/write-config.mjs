@@ -12,4 +12,4 @@ if(supabaseAnonKey&&!supabaseAnonKey.startsWith('sb_publishable_')){
  if(claims.role!=='anon')throw new Error('Only a publishable or anon key may be put in the browser.');
 }
 await writeFile(new URL('../dist/config.js',import.meta.url),"'use strict';\nwindow.ECHO_CONFIG=Object.freeze("+JSON.stringify({supabaseUrl,supabaseAnonKey})+");\n");
-console.log('Public browser configuration written. Accounts: '+Boolean(supabaseUrl)+'. Audio catalog: Audius and local files.');
+console.log('Public browser configuration written. Accounts: '+Boolean(supabaseUrl)+'. Music library: YouTube Music; native audio and local files are retained.');

@@ -2,10 +2,10 @@
 let chatContext=null,chatGeneration=0,shareGeneration=0,friendShare=null;
 const chatPeople=new Map();
 function stopChat(){chatGeneration++;if(chatContext)clearTimeout(chatContext.timer);chatContext=null}
-function sharedMusic(track){return track?.provider==='youtube'?null:EchoMusicLibrary.share(track)}
+function sharedMusic(track){return EchoMusicLibrary.share(track)}
 function musicCard(track,action='play'){
- const t=sharedMusic(track)||(track?.provider==='youtube'?{...EchoMusicLibrary.share(track),unavailable:true}:null);if(!t)return '';
- return `<div class="music-message"><img src="${esc(t.cover)}" alt="${esc(t.album||t.title)} 专辑封面"><div><strong>${esc(t.title)}</strong><span>${esc(t.artist)}</span><small>${esc(t.category)}</small></div>${t.unavailable?'<small>来源已停用</small>':action==='play'?`<button class="icon-btn" data-message-play="${esc(t.id)}" aria-label="播放 ${esc(t.title)}">${icon('play')}</button>`:action==='remove'?'<button type="button" class="icon-btn" id="remove-chat-track" aria-label="移除歌曲">'+icon('close')+'</button>':''}</div>`;
+ const t=sharedMusic(track);if(!t)return '';
+ return `<div class="music-message"><img src="${esc(t.cover)}" alt="${esc(t.album||t.title)} 专辑封面"><div><strong>${esc(t.title)}</strong><span>${esc(t.artist)}</span><small>${esc(t.category)}</small></div>${action==='play'?`<button class="icon-btn" data-message-play="${esc(t.id)}" aria-label="播放 ${esc(t.title)}">${icon('play')}</button>`:action==='remove'?'<button type="button" class="icon-btn" id="remove-chat-track" aria-label="移除歌曲">'+icon('close')+'</button>':''}</div>`;
 }
 function displayMessage(row,uid){
  const time=new Date(row.created_at),valid=Number.isFinite(time.getTime());
@@ -70,7 +70,7 @@ async function chooseMusicFriend(id){
 function playMessageTrack(id){
  const row=chatContext?.items.find(item=>item.track?.id===id),t=sharedMusic(row?.track);if(!t)return;
  let track=getTrack(t.id);
- if(!track){if(t.provider==='Audius')track={...t,src:CATALOG_API+'/tracks/'+t.id.slice(7)+'/stream?app_name=Echo',remote:true,mood:'',permalink:'https://audius.co'};if(track)tracks.push(track)}
+ if(!track){if(t.provider==='youtube')track=youtubeTrack(t);else if(t.provider==='Audius')track={...t,src:CATALOG_API+'/tracks/'+t.id.slice(7)+'/stream?app_name=Echo',remote:true,mood:'',permalink:'https://audius.co'};if(track)tracks.push(track)}
  if(track){if(!bundled.some(item=>item.id===track.id))Object.assign(track,{title:t.title,artist:t.artist,album:t.album,cover:t.cover,category:t.category,duration:t.duration||track.duration});playTrack(track.id,[track.id]);rememberOnline()}
 }
 document.addEventListener('click',async event=>{

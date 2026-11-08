@@ -1,6 +1,6 @@
 # Echo
 
-Minimal, responsive audio music player. Version 0.5.0 removes YouTube playback and the floating video frame. Music plays through native HTMLAudio using Audius public audio streams, the included licensed tracks, and files imported on the device.
+Minimal, responsive music player. Version 0.5.1 restores the previous YouTube Music search and playback engine, while keeping its video surface outside the visible layout. Password, avatar, Apps Script, membership, friends, and chat features from 0.5.0 are retained. Native audio still supports Audius streams, included licensed tracks, and files imported on the device.
 
 - Website: https://jianming0718.github.io/echo-music/
 - Source: https://github.com/Jianming0718/echo-music
@@ -10,7 +10,7 @@ Minimal, responsive audio music player. Version 0.5.0 removes YouTube playback a
 
 Music, Search, and Library are the three mobile navigation entries. Favorites, playlists, and friends live in Library. The player supports queue editing, shuffle, repeat, seek, sleep timer, session restoration, Media Session controls, synchronized lyrics, LRC import, and lyric timing adjustment.
 
-The app does not create a YouTube iframe or load its player SDK. Previously saved YouTube metadata can remain visible as an unavailable source; it is not playable. Existing native/local audio continues when the playback dialog closes or the document becomes hidden, subject to browser and OS behavior. Closing the browser tab ends webpage playback.
+The floating video dock and its now-playing video slot are removed. A single real YouTube iframe remains in an offscreen, inert, aria-hidden engine container; deleting that iframe would stop playback. The existing buttons control it through the player API, without simulated clicks or a fake playing state. Saved YouTube entries and song-sharing cards are playable again. Browser autoplay denial presents a retry and external YouTube link. Some devices require a direct interaction inside a visible video; hidden playback cannot satisfy that restriction. Background and lock-screen playback remain subject to browser, YouTube, and OS behavior. Closing the browser tab ends webpage playback.
 
 Audius search filters out gated and unavailable recordings. This catalog differs from YouTube Music and does not guarantee every commercial song. Live verification returned audio/mpeg with a successful partial-content stream response. Real iPhone/Android listening and lock-screen behavior still require device verification. Included Scott Buckley tracks can play independently of the online catalog.
 
@@ -47,13 +47,13 @@ Use Node.js 24 for development. `npm ci`, then `npm test` runs playback, Postgre
 
 Serve the app with `python -m http.server 8000 --directory dist`. The static output is already present. `npm run config` writes public browser configuration. `npm run vendor` rebuilds the pinned official Supabase SDK. Only publishable or legacy anon keys belong in browser configuration; service-role and admin-hook secrets remain server-side.
 
-The current environment has no available browser-control tool. DOM and media behavior tests use controlled models; actual email delivery, Google deployment, and device UI require verification.
+The current environment has no available browser-control tool. DOM and media behavior tests use controlled models; actual email delivery, authenticated Sheets synchronization, device UI, and live embedded playback require verification. Apps Script deployment version 2 was confirmed using its health endpoint.
 
 ## Deploy
 
 GitHub Pages publishes `dist` from main using `.github/workflows/pages.yml`. Public Supabase variables can override the committed public configuration. The static site works under a repository path; the service worker and versioned assets preserve local user data while updating code.
 
-Supabase Free project: `blzeipqcocynqvsgvgtb`, region `us-east-1`. Apply the SQL files in `supabase/migrations/` in order. Their contents match applied hosted migrations. Functions are in `supabase/functions/`. The retired YouTube search endpoint returns 410 and is not used by the app.
+Supabase Free project: `blzeipqcocynqvsgvgtb`, region `us-east-1`. Apply the SQL files in `supabase/migrations/` in order. Their contents match applied hosted migrations. Functions are in `supabase/functions/`. The `youtube-search` Edge Function is restored with result parsing, request validation, caching, and pagination. The browser calls it with the public project key; no private Google API key is required.
 
 Free services have quotas; no paid plan was enabled. Supabase's existing leaked-password-protection notice remains: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .
 
