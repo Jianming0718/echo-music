@@ -1,0 +1,1 @@
+Deno.serve(()=>new Response(JSON.stringify({error:'RESOLVER_DISABLED',message:'Direct audio resolution did not pass live verification.'}),{status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}}));

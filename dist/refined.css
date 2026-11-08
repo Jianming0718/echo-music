@@ -240,3 +240,5 @@ body.youtube-active #now-playing #np-video-slot{height:var(--video-height,229px)
 @media(max-width:640px){.album-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 14px}.profile-avatar{width:64px;height:64px;font-size:24px}.profile-heading{gap:14px}.profile-heading h2{font-size:23px!important}.avatar-actions{gap:12px}.album-card strong{font-size:13px}}
 
 .media-engine{position:fixed;left:-10000px;top:0;width:320px;height:200px;overflow:hidden;pointer-events:none;contain:strict}.media-engine iframe{width:320px;height:200px;border:0}.playback-feedback{font-size:12px;color:var(--muted,#a7b29a);line-height:1.5}.playback-feedback[hidden]{display:none}.playback-feedback p{margin:8px 0}.playback-feedback a,.playback-feedback button{display:inline-block;margin-right:12px;color:var(--accent,#d3ed9b)}
+
+.helper-status{padding:12px 14px;border:1px solid var(--line,#ffffff14);border-radius:10px;font-size:13px}.setup-steps{padding-left:22px;line-height:1.8;font-size:13px}.setup-steps li{padding-left:3px;margin:12px 0}.setup-steps p{margin:7px 0}.setting-row input[type=checkbox]{accent-color:var(--accent,#d3ed9b);width:20px;height:20px;flex:none}

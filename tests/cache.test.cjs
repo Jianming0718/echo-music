@@ -12,5 +12,6 @@ const root=path.join(__dirname,'../dist'),version=require('../package.json').ver
  assert(cached.some(request=>request.url.endsWith('media-transport.js?v='+version)));assert(cached.every(request=>request.cache==='reload'));
  let result;handlers.fetch({request:new Request(scope+'app.js?v='+version),respondWith:promise=>result=promise});assert.equal(await (await result).text(),'current source');assert.equal(responses[0].cache,'no-cache');
  sandbox.fetch=async()=>{throw Error('offline')};let matchOptions;caches.match=async(request,options)=>{matchOptions=options;return new Response('offline shell')};handlers.fetch({request:new Request(scope+'media-transport.js?v='+version),respondWith:promise=>result=promise});assert.equal(await (await result).text(),'offline shell');assert.equal(matchOptions.ignoreSearch,true);
+ let scriptIntercepted=false;handlers.fetch({request:new Request(scope+'echo-ad-skip.user.js'),respondWith:()=>{scriptIntercepted=true}});assert.equal(scriptIntercepted,false);
  console.log('PASS all script/style versions agree, installation reloads stale assets, runtime revalidates, and versioned offline assets remain available');
 })().catch(error=>{console.error(error);process.exit(1)});

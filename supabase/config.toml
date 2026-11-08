@@ -3,3 +3,6 @@ verify_jwt = false
 
 [functions.account-admin]
 verify_jwt = false
+
+[functions.audio-resolve]
+verify_jwt = true

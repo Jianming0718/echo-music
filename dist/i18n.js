@@ -334,6 +334,24 @@ Audius 热门\tTrending on Audius
 音乐库响应超时，请重试。\tThe music catalog took too long to respond. Please try again.
 请求过多，请稍后重试。\tAudius is receiving too many requests. Please try again shortly.
 此分享歌曲暂不可用。\tThis shared song is unavailable.
+Safari 广告跳过\tSafari ad skipping
+安装与状态\tSetup and status
+需要免费的 Userscripts Safari 扩展，普通网页无法自行取得这项权限。\tRequires the free Userscripts Safari extension. A webpage cannot grant itself these permissions.
+允许广告跳过脚本\tAllow the ad helper script
+安装 Userscripts\tInstall Userscripts
+在 iPhone 设置中启用 Safari 的 Userscripts 扩展，并允许它访问 Echo、youtube.com 和 youtube-nocookie.com。\tEnable Userscripts for Safari in iPhone Settings, and allow access to Echo, youtube.com, and youtube-nocookie.com.
+用 Safari 打开跳广告脚本\tOpen the ad helper script in Safari
+打开 Safari 的扩展菜单，选择 Userscripts 并安装脚本。也可以将下载的文件保存到 Userscripts 指定的文件夹。\tOpen Safari's extensions menu, select Userscripts, and install the script. You can also save the downloaded file in the directory selected in Userscripts.
+回到 Echo 刷新页面，再播放音乐；上方会显示脚本是否已连接。\tReturn to Echo, refresh, and play a song. The status above shows whether the script is connected.
+脚本尝试点击跳过按钮，并对播放器明确标记为广告的片段静音和加速；不会自动点击播放或跳过歌曲。部分广告仍可能需要等待，实际效果需在手机验证。\tThe script tries ad skip buttons and mutes and accelerates segments explicitly marked as ads by the player. It never starts playback or seeks past songs. Some ads may still require waiting. Verify the actual behavior on your phone.
+此方案用于 Safari；iPhone Chrome 无法加载 Safari 扩展。\tThis method is for Safari. Chrome on iPhone cannot load Safari extensions.
+下载脚本文件\tDownload script file
+广告跳过脚本已关闭\tAd helper script disabled
+未检测到 Safari 跳广告脚本\tSafari ad helper script not detected
+正在尝试跳过广告\tTrying to skip an ad
+Safari 跳广告脚本已连接\tSafari ad helper script connected
+可选 Safari 脚本\tOptional Safari script
+可选脚本只在收到 Echo 的握手后处理 YouTube 播放器标记的广告。它不会读取或上传账号、歌单或聊天内容，也不会请求其他网络服务。安装和网站访问权限由你在 Safari 扩展中管理。\tThe optional script handles player-marked YouTube ads only after a handshake from Echo. It does not read or upload accounts, playlists, or chat content and does not request other network services. You manage installation and website permissions in your Safari extension.
 返回 Echo\tBack to Echo
 热门音乐\tPopular music
 请尝试其他歌曲或歌手。\tTry another song or artist.

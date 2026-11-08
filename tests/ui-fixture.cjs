@@ -25,7 +25,7 @@ function fixture({config={},fetcher,videoReadyDelay=0,width=390,autoStart=true,s
  }};
  for(const [key,value]of Object.entries(storage))w.localStorage.setItem('echo-'+key,key==='language'?String(value):JSON.stringify(value));
  w.ECHO_CONFIG=config;
- for(const name of ['i18n.js','music-library.js','artwork.js','profile-photo.js','account-service.js','media-transport.js','player-core.js'])w.eval(fs.readFileSync(root+'/'+name,'utf8'));
+ for(const name of ['i18n.js','music-library.js','artwork.js','profile-photo.js','account-service.js','media-transport.js','player-core.js','ad-skip-bridge.js'])w.eval(fs.readFileSync(root+'/'+name,'utf8'));
  w.eval(fs.readFileSync(root+'/app.js','utf8').replace(/\ninit\(\);\s*$/, '\nwindow.echoAppReady=init();')+';'+fs.readFileSync(root+'/social.js','utf8')+';window.echoTest={player,audio,parseLrc,cleanLyricTitle,bestLyricRecord,playYouTube,openNowPlaying,toggleLyrics,loadLyrics,showLyrics,syncLyrics,setView,getTrack,activeTrack,updateProgress,renderYouTubeResults,cloud,openChat,stopChat,chooseMusicFriend,sharedMusic,categoryForTrack,accountPanel,receiveAccount,registerCloudTrack,playTrack,setAccountMode:mode=>{accountMode=mode;accountPanel()}};');
  return {dom,w,d,errors,videos,ready:()=>w.echoAppReady,close:()=>w.close(),click(selector){const node=d.querySelector(selector);if(!node)throw Error('Missing '+selector);node.click()},search(term){const node=d.querySelector('#music-search');node.value=term;node.dispatchEvent(new w.Event('input',{bubbles:true}));d.querySelector('#music-search-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}))}};
 }
