@@ -27,6 +27,7 @@ function renderChatMessages(context,keepPosition=false){
 }
 function mergeChatMessages(context,rows){const all=new Map(context.items.map(row=>[row.id,row]));for(const row of rows)all.set(row.id,row);context.items=[...all.values()].sort((a,b)=>a.created_at.localeCompare(b.created_at)||a.id.localeCompare(b.id))}
 async function refreshChat(older=false){
+ if(typeof EchoCommunity!=='undefined'&&!EchoCommunity.active('chat'))return;
  const context=chatContext;if(!context||context.loading||document.hidden)return;
  const generation=chatGeneration;context.loading=true;const button=$('#chat-older');if(older&&button)button.disabled=true;
  try{
@@ -46,6 +47,7 @@ async function refreshChat(older=false){
  }
 }
 function openChat(person){
+ if(typeof EchoCommunity!=='undefined'&&!EchoCommunity.active('chat'))return;
  if(!cloud.user){accountPanel();return}
  if(!person?.id||person.id===cloud.user.id)return;
  if(view==='artist')dismissArtistRoute();stopChat();cancelCatalog();sheet.close();if(now.open)now.close();view='chat';$('#page-title').textContent='聊天';
@@ -56,6 +58,7 @@ function openChat(person){
 }
 function renderChatAttachment(){if(!chatContext)return;$('#chat-attachment').innerHTML=chatContext.track?musicCard(chatContext.track,'remove'):'';$('#chat-form button[type="submit"]').disabled=!$('#chat-body').value.trim()&&!chatContext.track}
 async function chooseMusicFriend(id){
+ if(typeof EchoCommunity!=='undefined'&&!EchoCommunity.active('chat'))return;
  const track=sharedMusic(getTrack(id));if(!track){toast('该曲目暂不支持直接分享。');return}
  if(!cloud.user){accountPanel();return}
  const generation=++shareGeneration,uid=cloud.user.id;friendShare={uid,track,ids:new Map()};

@@ -1,0 +1,38 @@
+const assert=require('node:assert/strict'),crypto=require('node:crypto'),{fixture}=require('./sheets-fixture.cjs');
+const f=fixture(),A=crypto.randomUUID(),B=crypto.randomUUID(),C=crypto.randomUUID(),now=new Date().toISOString(),sessions=new Map();
+for(const [id,name,role] of [[A,'Alice','admin'],[B,'Bob','member'],[C,'Carol','member']]) {
+ f.put('Users',{user_id:id,email:name+'@example.invalid',display_name:name,handle:name.toLowerCase(),account_status:'active',tier:'free',role,created_at:now});
+ f.put('Auth',{user_id:id,email:name+'@example.invalid',email_verified:true});
+ const token=crypto.randomBytes(32).toString('hex');sessions.set(id,token);f.put('Sessions',{token_hash:f.context.echoDigest_(token),user_id:id,created_at:now,expires_at:new Date(Date.now()+86400000).toISOString()});
+}
+const friendId=crypto.randomUUID();f.put('Friendships',{id:friendId,requester_id:A,addressee_id:B,status:'accepted',created_at:now});
+const call=(uid,action,body={})=>f.post({action,session_token:sessions.get(uid),...body}),track={id:'sanctuary',title:'Sanctuary',artist:'Scott Buckley',src:'private'},id=crypto.randomUUID();
+assert.equal(call(A,'social.status').ok,true);assert.equal(f.context.echoSheetsHealth_().version,'4');
+assert.equal(call(A,'social.post',{id,body:'=IMPORTXML("bad") <script>',track}).ok,true);
+assert.equal(call(A,'social.post',{id,body:'=IMPORTXML("bad") <script>',track}).ok,true);assert.equal(f.records('Posts').length,1);
+assert.equal(call(B,'social.feed').posts[0].body,'=IMPORTXML("bad") <script>');assert(!('src' in call(B,'social.feed').posts[0].track));assert(!JSON.stringify(call(B,'social.feed')).includes('@example.invalid'));
+assert.equal(call(C,'social.feed').posts.length,0);assert.equal(call(C,'social.comments',{post_id:id}).error,'FORBIDDEN');assert.equal(call(B,'social.delete',{post_id:id}).error,'FORBIDDEN');
+console.log('PASS friends-only feed, escaped Sheet formulas, safe profiles, idempotent publishing, and owner deletion authorization');
+assert.equal(call(B,'social.react',{post_id:id,liked:true}).ok,true);call(B,'social.react',{post_id:id,liked:true});assert.equal(call(A,'social.feed').posts[0].likes,1);
+const comment=crypto.randomUUID();assert.equal(call(B,'social.comment',{post_id:id,id:comment,body:'Nice song'}).ok,true);assert.equal(call(B,'social.comment',{post_id:id,id:comment,body:'Nice song'}).ok,true);assert.equal(call(A,'social.comments',{post_id:id}).comments.length,1);assert.equal(call(A,'social.feed').posts[0].comments,1);
+assert.equal(call(B,'social.comment',{post_id:id,id:comment,body:'Changed'}).error,'CONTENT_CONFLICT');assert.equal(call(C,'social.react',{post_id:id,liked:true}).error,'FORBIDDEN');
+console.log('PASS idempotent likes and comments, conflict detection, and friendship checks on every interaction');
+const danmaku=crypto.randomUUID(),dan={id:danmaku,track_id:'sanctuary',body:'Hello',position:12.25};
+assert.equal(call(B,'danmaku.send',dan).ok,true);assert.equal(call(B,'danmaku.send',dan).ok,true);assert.equal(f.records('Danmaku').length,1);assert.equal(call(A,'danmaku.read',{track_id:'sanctuary'}).messages.length,1);assert.equal(call(C,'danmaku.read',{track_id:'sanctuary'}).messages.length,0);assert.equal(call(B,'danmaku.send',{...dan,id:crypto.randomUUID(),position:-1}).error,'INVALID_REQUEST');
+console.log('PASS timed friend danmaku validates playback position and remains private to the current audience');
+const roomId=crypto.randomUUID();assert.equal(call(A,'rooms.create',{id:roomId,name:'Quiet room',members:[C],track,position:0,playing:false}).error,'FRIENDS_REQUIRED');
+const created=call(A,'rooms.create',{id:roomId,name:'Quiet room',members:[B],track,position:0,playing:false});assert(created.ok);assert.equal(call(B,'rooms.list').rooms.length,1);assert.equal(call(C,'rooms.list').rooms.length,0);assert.equal(call(C,'rooms.read',{id:roomId}).error,'FORBIDDEN');
+assert.equal(call(B,'rooms.update',{id:roomId,revision:1,track,position:1,playing:true}).error,'FORBIDDEN');assert.equal(call(A,'rooms.update',{id:roomId,revision:1,track,position:20,playing:true}).room.revision,2);assert.equal(call(A,'rooms.update',{id:roomId,revision:1,track,position:5,playing:true}).error,'ROOM_STALE');
+const messageId=crypto.randomUUID();assert.equal(call(B,'rooms.message',{id:roomId,message_id:messageId,body:'Listening together'}).ok,true);call(B,'rooms.message',{id:roomId,message_id:messageId,body:'Listening together'});assert.equal(call(A,'rooms.read',{id:roomId}).messages.length,1);
+console.log('PASS invitation-only rooms, host-only playback, revision conflict protection, and idempotent room chat');
+assert.equal(call(A,'friends.remove',{id:friendId}).ok,true);assert.equal(call(B,'social.feed').posts.length,0);assert.equal(call(B,'social.comments',{post_id:id}).error,'FORBIDDEN');assert.equal(call(B,'rooms.read',{id:roomId}).error,'FORBIDDEN');assert.equal(call(B,'danmaku.read',{track_id:'sanctuary'}).messages.length,1);assert.equal(call(A,'danmaku.read',{track_id:'sanctuary'}).messages.length,0);
+console.log('PASS removing a friend immediately revokes feed, comment, room, and danmaku access');
+f.put('Friendships',{id:crypto.randomUUID(),requester_id:A,addressee_id:B,status:'accepted'});
+assert.equal(call(B,'rooms.leave',{id:roomId}).ok,true);assert.equal(call(B,'rooms.read',{id:roomId}).error,'FORBIDDEN');assert.equal(call(A,'rooms.leave',{id:roomId}).ok,true);assert.equal(call(A,'rooms.read',{id:roomId}).error,'ROOM_UNAVAILABLE');assert.equal(f.records('RoomMessages').length,0);
+console.log('PASS room leave revokes invitations and closing a room removes its chat');
+for(let i=0;i<24;i++)f.put('Posts',{id:crypto.randomUUID(),user_id:A,body:'Post '+i,created_at:new Date(Date.now()+1000+i).toISOString(),track:null});
+const first=call(B,'social.feed'),next=call(B,'social.feed',{cursor:first.posts.at(-1)});assert(first.hasMore);assert.equal(new Set([...first.posts,...next.posts].map(row=>row.id)).size,25);assert.equal(call(B,'social.feed',{cursor:{id:'invalid',created_at:now}}).error,'INVALID_CURSOR');
+console.log('PASS deterministic keyset pagination keeps older activity reachable without duplicates');
+call(A,'social.delete',{post_id:id});assert.equal(f.records('PostComments').length,0);assert.equal(f.records('PostReactions').length,0);
+assert.equal(call(B,'auth.delete').ok,true);assert.equal(f.records('Danmaku').length,0);assert(!JSON.stringify(f.records('Rooms')).includes(B));assert.equal(f.mail.length,0);
+console.log('PASS post deletion cascades reactions/comments and account deletion removes all social records without sending email');

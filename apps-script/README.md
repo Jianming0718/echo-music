@@ -1,21 +1,32 @@
-# Echo Apps Script version 3
+# Echo Apps Script version 4
 
-Version 3 is active for the current Echo project. The current website uses Apps Script and private Google Sheets for password authentication and account data. The operator is `admin` in Users. Original account IDs are retained and existing users set a new password through email. Supabase account-data access and legacy Edge entrypoints are closed; avatar storage and music-search/artist functions remain available. The old database is a restricted migration archive, not the live account database.
+The website uses private Google Sheets for accounts and social data. Version 4 adds friends-only music posts, likes, comments, timed song comments, and invitation-only listening rooms. Production remains on version 3 until the owner updates the existing deployment. The website reports this clearly; existing login, music and private chat remain usable while upgrading.
 
 Private management sheet: https://docs.google.com/spreadsheets/d/1mn55LJ8osh3hMM9SANLTb3OgT8iNCtQt8vaSsuiqZ0U/edit
 
 Existing web app: https://script.google.com/macros/s/AKfycbzyabVdmmaYivsQ-ji_vHVVz6EzSxMG8wFKjj5WGW4TX7SvKkNb34HTuRktlNyo1jIdNg/exec
 
-## Updating or reproducing the script
+## Upgrade the current project from version 3
 
-For the current live project, keep `ECHO_DATA_MODE=sheets`. The staged steps below describe an initial installation or another verified migration.
+1. Open the existing Apps Script project. Replace the entire **Code.gs** with the complete **Code.gs** from this package. Do not add the separate source modules to the editor. Keep **Config.gs**, the manifest, all Script Properties, and the existing deployment URL.
+2. Select **installEchoSheets** and click **Run**. This adds six missing tabs: Posts, PostComments, PostReactions, Danmaku, Rooms, and RoomMessages. It preserves existing account records, passwords, administrator roles, membership/status columns, the private password pepper, and `ECHO_DATA_MODE=sheets`. It sends no email. Do not set the mode back to staged, and do not import old migration snapshots.
+3. **Deploy → Manage deployments → Edit the original Web app → New version → Deploy.** Keep Execute as yourself and access Anyone. The URL must remain the same `/exec` URL.
+4. Open the `/exec` URL. Verify `version: "4"`, `mode: "sheets"`, and `schemaReady`, `passwordReady`, `avatarReady` all true. Capabilities should include feed, danmaku and rooms. Refresh Echo and open Friends.
 
-1. Open the private sheet → Extensions → Apps Script. Replace the entire existing **Code.gs** with the complete **Code.gs** from this package. This file already includes the password library and all service modules. Keep the existing **Config.gs**, manifest and Script Properties. Do not add separate copies of the files under `src` or `vendor` to the Apps Script editor.
-2. Run **installEchoSheets** once and grant the requested Google permissions. It preserves existing rows and role/status/membership controls, creates any missing data tabs and private password pepper, and checks the existing private avatar connection. It sends no email. Leave `ECHO_DATA_MODE` as **staged**.
-3. Deploy → Manage deployments → Edit the original web app → New version → Deploy. Continue executing as yourself with access set to Anyone. Keep the same `/exec` URL.
-4. Reply **已更新版本 3**. The health endpoint must report version 3 with `schemaReady`, `passwordReady` and `avatarReady` true, and mode `staged`.
+中文：用本安装包完整 Code.gs 替换原文件；运行 installEchoSheets；在原部署中选择「新版本」发布。Config.gs、脚本属性、部署 URL 和现有资料保持原样。无需再次迁移账号或运行 activateEchoSheets。
 
-The current Google connector cannot edit or publish an Apps Script project. Updating the Drive ZIP does not update the running web app. Publishing this code requires the steps above.
+The current Google connector cannot edit or publish an Apps Script project. Updating this Drive ZIP does not update the running Web app.
+
+## Social behavior and limits
+
+- Music posts, reactions, comments and timed song comments are visible only to the author and their current confirmed friends. Removing a friendship revokes access on the next request. Private account email, roles, session tokens and password hashes are never included in social profiles.
+- A post author can remove comments on their own post; users can delete their own posts, comments and timed comments. Administrators can delete inappropriate content through the authenticated APIs.
+- Rooms require confirmed friends explicitly selected by the host, up to 12 invitees. Only the host can publish playback state; a revision number rejects stale writes. Room access is checked on every request. Each device streams independently from its own provider. A participant must tap Start following to allow playback. Local audio files are not uploaded or broadcast. Provider advertising, regional availability, browser autoplay rules, buffering and network latency can cause differences between devices.
+- Visible rooms poll about every 10 seconds; this is periodic synchronization, not a WebSocket service or guaranteed sample-accurate playback. The host publishes play/pause and track changes sooner when possible. Hiding the page pauses polling. Turning off rooms immediately stops following; it does not pause standalone music.
+- Rooms expire after 24 hours. Ending a room immediately removes its chat; expired rooms and their messages are removed when another room is created. Room messages are capped at the latest 200; the interface reads the latest 40. Posts and comments use keyset pagination. Timed song comments load the latest 150 per song and animate only around their playback timestamp. Reduced-motion mode keeps the readable list without animated overlays.
+- Per-account limits: 200 posts, 1000 post comments, 2000 post reactions, and 500 timed comments. Social writes and room creation are throttled. These limits keep the free Sheets backend suitable for a small service. Apps Script has execution quotas and Sheets is not an unlimited social-network database.
+- Settings provide independent switches for Music feed, Song comments, Listening rooms and Friend chat. Preferences are local to the device. Turning a feature off stops its UI/refresh/following; existing content remains until its owner deletes it. Interaction drafts stay in page memory and are not written to localStorage.
+- Account deletion removes owned posts and dependent comments/reactions, the user's other comments/reactions/timed messages, owned rooms/chat and other room memberships/messages. The last administrator remains protected from accidental deletion.
 
 ## Final cutover, after the script is verified
 

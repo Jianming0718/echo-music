@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hans" data-echo-release="0.10.0">
+<html lang="zh-Hans" data-echo-release="0.11.0">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -8,15 +8,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Echo</title>
-<script src="appearance.js?v=0.10.0"></script>
-<link rel="icon" href="assets/brand/Logo_Lighttheme.png" type="image/png" sizes="1750x1750">
-<link rel="apple-touch-icon" href="assets/brand/Logo_Lighttheme.png">
+<script src="appearance.js?v=0.11.0"></script>
+<link rel="icon" href="assets/fav.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/fav.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=0.10.0">
-<link rel="stylesheet" href="spotify-theme.css?v=0.10.0">
-<link rel="stylesheet" href="minimal.css?v=0.10.0">
-<link rel="stylesheet" href="refined.css?v=0.10.0">
-<link rel="stylesheet" href="appearance.css?v=0.10.0">
+<link rel="stylesheet" href="style.css?v=0.11.0">
+<link rel="stylesheet" href="spotify-theme.css?v=0.11.0">
+<link rel="stylesheet" href="minimal.css?v=0.11.0">
+<link rel="stylesheet" href="refined.css?v=0.11.0">
+<link rel="stylesheet" href="appearance.css?v=0.11.0">
+<link rel="stylesheet" href="community.css?v=0.11.0">
 </head>
 <body>
 <svg class="svg-defs" aria-hidden="true"><defs>
@@ -109,7 +110,7 @@
 <div class="player-tools"><span id="playback-status" role="status" hidden></span><button class="icon-btn" id="retry-playback" aria-label="Retry playback" hidden><svg><use href="#i-repeat"/></svg></button><button class="icon-btn" id="volume-toggle" aria-label="Mute"><svg><use href="#i-volume"/></svg></button><input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume"><button class="icon-btn" id="open-lyrics" aria-label="Open lyrics"><svg><use href="#i-lyrics"/></svg></button><span class="tool-divider"></span><button class="icon-btn queue-btn" aria-label="Open play queue"><svg><use href="#i-queue"/></svg></button></div>
 <button class="icon-btn mobile-play toggle-play" aria-label="Play"><svg><use href="#i-play"/></svg></button><button class="icon-btn mobile-queue queue-btn" aria-label="Open play queue"><svg><use href="#i-queue"/></svg></button><div class="mini-progress"><span></span></div>
 </section>
-<nav class="bottom-nav" aria-label="主导航"><button class="active" data-view="discover"><svg><use href="#i-disc"/></svg><span>音乐</span></button><button data-view="search"><svg><use href="#i-search"/></svg><span>搜索</span></button><button data-view="library"><svg><use href="#i-library"/></svg><span>资料库</span></button></nav>
+<nav class="bottom-nav" aria-label="主导航"><button class="active" data-view="discover"><svg><use href="#i-disc"/></svg><span>音乐</span></button><button data-view="search"><svg><use href="#i-search"/></svg><span>搜索</span></button><button data-view="library"><svg><use href="#i-library"/></svg><span>资料库</span></button><button data-view="friends"><svg><use href="#i-friends"/></svg><span>好友</span></button></nav>
 <dialog id="sheet"><div class="sheet-top"><span id="sheet-eyebrow">ECHO</span><button class="icon-btn" id="close-sheet" aria-label="Close dialog"><svg><use href="#i-close"/></svg></button></div><div id="sheet-content"></div></dialog>
 <dialog id="now-playing" aria-label="Now playing and lyrics"><div class="np-atmosphere" aria-hidden="true"></div><div class="np-top"><button class="icon-btn" id="close-now" aria-label="Close now playing"><svg><use href="#i-down"/></svg></button><div><small>ECHO</small><span>正在播放</span></div><div class="np-top-tools"><button class="icon-btn lyrics-toggle active-control" id="toggle-lyrics" aria-label="Toggle lyrics" aria-pressed="true"><svg><use href="#i-lyrics"/></svg></button><button class="icon-btn queue-btn" aria-label="Open play queue"><svg><use href="#i-queue"/></svg></button></div></div><div class="np-stage"><section class="np-deck" aria-label="Playback"><img id="np-cover" src="assets/forest.jpg" alt="Current album artwork"><div class="np-meta"><img id="np-inline-cover" src="assets/forest.jpg" alt="专辑封面"><div><h2 id="np-title">Sanctuary</h2><p><button id="np-artist" class="artist-link" type="button" aria-label="查看歌手">Scott Buckley</button></p></div><button class="icon-btn" id="np-like" aria-label="Like current song"><svg><use href="#i-heart"/></svg></button></div><div class="np-timeline"><input type="range" id="np-seek" min="0" max="100" value="0" step="0.1" aria-label="Playback position"><div><span id="np-elapsed">0:00</span><span id="np-duration">4:06</span></div></div><div class="np-volume"><button class="icon-btn" id="np-volume-toggle" aria-label="Mute"><svg><use href="#i-volume"/></svg></button><input id="np-volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume"><span id="np-volume-value" class="volume-level" aria-hidden="true">80%</span></div><div class="np-controls"><button class="icon-btn shuffle-btn" aria-label="Enable shuffle"><svg><use href="#i-shuffle"/></svg></button><button class="icon-btn prev-btn" aria-label="Previous song"><svg><use href="#i-prev"/></svg></button><button class="play-button toggle-play" aria-label="Play"><svg><use href="#i-play"/></svg></button><button class="icon-btn next-btn" aria-label="Next song"><svg><use href="#i-next"/></svg></button><button class="icon-btn repeat-btn" aria-label="Repeat off"><svg><use href="#i-repeat"/></svg><span class="repeat-one" hidden>1</span></button></div><div id="youtube-feedback" class="playback-feedback" role="status" hidden></div><div class="np-bottom"><span></span><button class="icon-btn" id="track-actions" aria-label="Current song options"><svg><use href="#i-more"/></svg></button></div></section><section class="lyrics-panel" aria-label="Song lyrics"><div class="lyrics-heading"><span id="lyrics-status">LYRICS</span><button class="icon-btn" id="lyrics-options" aria-label="Lyrics options"><svg><use href="#i-more"/></svg></button></div><div class="lyrics-scroll" id="lyrics-scroll" tabindex="0" aria-label="Lyrics text"></div><div class="lyrics-footer"><button id="lyrics-follow" hidden>跟随歌词</button></div></section></div></dialog>
 
@@ -120,20 +121,22 @@
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="youtube-engine" class="media-engine" aria-hidden="true" inert><div id="youtube-player"></div></div>
 <audio id="audio" playsinline webkit-playsinline preload="metadata" src="assets/sanctuary.mp3"></audio>
-<script src="config.js?v=0.10.0" defer></script>
-<script src="vendor/supabase.js?v=0.10.0" defer></script>
-<script src="i18n.js?v=0.10.0" defer></script>
-<script src="music-library.js?v=0.10.0" defer></script>
-<script src="artwork.js?v=0.10.0" defer></script>
-<script src="profile-photo.js?v=0.10.0" defer></script>
-<script src="account-service.js?v=0.10.0" defer></script>
-<script src="sheets-account-service.js?v=0.10.0" defer></script>
-<script src="media-transport.js?v=0.10.0" defer></script>
-<script src="player-core.js?v=0.10.0" defer></script>
-<script src="ad-skip-bridge.js?v=0.10.0" defer></script>
-<script src="artist-service.js?v=0.10.0" defer></script>
-<script src="admin-users.js?v=0.10.0" defer></script>
-<script src="app.js?v=0.10.0" defer></script>
-<script src="social.js?v=0.10.0" defer></script>
+<script src="config.js?v=0.11.0" defer></script>
+<script src="vendor/supabase.js?v=0.11.0" defer></script>
+<script src="i18n.js?v=0.11.0" defer></script>
+<script src="music-library.js?v=0.11.0" defer></script>
+<script src="artwork.js?v=0.11.0" defer></script>
+<script src="profile-photo.js?v=0.11.0" defer></script>
+<script src="account-service.js?v=0.11.0" defer></script>
+<script src="sheets-account-service.js?v=0.11.0" defer></script>
+<script src="media-transport.js?v=0.11.0" defer></script>
+<script src="player-core.js?v=0.11.0" defer></script>
+<script src="ad-skip-bridge.js?v=0.11.0" defer></script>
+<script src="artist-service.js?v=0.11.0" defer></script>
+<script src="admin-users.js?v=0.11.0" defer></script>
+<script src="app.js?v=0.11.0" defer></script>
+<script src="social.js?v=0.11.0" defer></script>
+<script src="community.js?v=0.11.0" defer></script>
+<script src="mobile-ui.js?v=0.11.0" defer></script>
 </body>
 </html>

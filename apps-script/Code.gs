@@ -1839,9 +1839,15 @@ const ECHO_TABLES={
  Likes:['user_id','track_id','track','created_at'],
  Playlists:['id','user_id','name','cover','visibility','created_at','items','updated_at'],
  Friendships:['id','requester_id','addressee_id','status','created_at'],
- Messages:['id','sender_id','recipient_id','body','track','created_at']
+ Messages:['id','sender_id','recipient_id','body','track','created_at'],
+ Posts:['id','user_id','body','track','created_at'],
+ PostComments:['id','post_id','user_id','body','created_at'],
+ PostReactions:['id','post_id','user_id','created_at'],
+ Danmaku:['id','track_id','user_id','body','position','created_at'],
+ Rooms:['id','host_id','name','members','track','position','playing','revision','updated_at','created_at','expires_at','closed'],
+ RoomMessages:['id','room_id','user_id','body','created_at']
 };
-const ECHO_JSON_COLUMNS={Likes:['track'],Playlists:['items'],Messages:['track']};
+const ECHO_JSON_COLUMNS={Likes:['track'],Playlists:['items'],Messages:['track'],Posts:['track'],Rooms:['members','track']};
 function echoFailure_(code){throw Error(code)}
 function echoTime_(){return new Date().toISOString()}
 function echoId_(value){return typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)}
@@ -1859,9 +1865,9 @@ function installEchoSheets(){
  for(const [name,headers]of Object.entries(ECHO_TABLES)){let sheet=book.getSheetByName(name);if(!sheet)sheet=book.insertSheet(name);const existing=sheet.getLastRow()?sheet.getRange(1,1,1,headers.length).getValues()[0]:[];if(existing.some((value,i)=>value&&value!==headers[i]))throw Error('Unexpected headers in '+name);sheet.getRange(1,1,1,headers.length).setValues([headers]);sheet.setFrozenRows(1)}
  if(!p.getProperty('ECHO_PASSWORD_PEPPER'))p.setProperty('ECHO_PASSWORD_PEPPER',Utilities.getUuid()+Utilities.getUuid()+Utilities.getUuid());
  if(!p.getProperty('ECHO_DATA_MODE'))p.setProperty('ECHO_DATA_MODE','staged');
- if(!p.getProperty('ECHO_DUMMY_HASH'))echoDummyHash_();p.setProperty('ECHO_SHEETS_VERSION','3');try{echoAvatarCall_({action:'sign',paths:[]});p.setProperty('ECHO_AVATAR_READY','true')}catch{p.setProperty('ECHO_AVATAR_READY','false');throw Error('Avatar connection failed. Check that ECHO_ADMIN_HOOK_KEY matches the existing Supabase secret; do not share the key in chat.')}
+ if(!p.getProperty('ECHO_DUMMY_HASH'))echoDummyHash_();p.setProperty('ECHO_SHEETS_VERSION','4');try{echoAvatarCall_({action:'sign',paths:[]});p.setProperty('ECHO_AVATAR_READY','true')}catch{p.setProperty('ECHO_AVATAR_READY','false');throw Error('Avatar connection failed. Check that ECHO_ADMIN_HOOK_KEY matches the existing Supabase secret; do not share the key in chat.')}
 }
-function echoSheetsHealth_(){const p=PropertiesService.getScriptProperties();let schemaReady=false;try{const cache={};for(const name of Object.keys(ECHO_TABLES))echoTable_(name,cache);schemaReady=true}catch{}return{version:'3',schemaReady,passwordReady:Boolean(p.getProperty('ECHO_PASSWORD_PEPPER')),avatarReady:p.getProperty('ECHO_AVATAR_READY')==='true',mode:p.getProperty('ECHO_DATA_MODE')||'staged',capabilities:['sheet_data','password_auth','avatar_storage']}}
+function echoSheetsHealth_(){const p=PropertiesService.getScriptProperties();let schemaReady=false;try{const cache={};for(const name of Object.keys(ECHO_TABLES))echoTable_(name,cache);schemaReady=true}catch{}return{version:'4',schemaReady,passwordReady:Boolean(p.getProperty('ECHO_PASSWORD_PEPPER')),avatarReady:p.getProperty('ECHO_AVATAR_READY')==='true',mode:p.getProperty('ECHO_DATA_MODE')||'staged',capabilities:['sheet_data','password_auth','avatar_storage',...(schemaReady?['feed','danmaku','rooms']:[])]}}
 function activateEchoSheets(){const health=echoSheetsHealth_();if(!health.schemaReady||!health.passwordReady||!health.avatarReady)throw Error('Run installEchoSheets and import migration data first');const cache={},users=echoTable_('Users',cache).rows,auth=echoTable_('Auth',cache).rows;if(!users.length||users.some(user=>!auth.some(row=>row.user_id===user.user_id&&String(row.email).toLowerCase()===String(user.email).toLowerCase()))||!users.some(user=>user.role==='admin'))throw Error('Migration users or administrator missing');PropertiesService.getScriptProperties().setProperty('ECHO_DATA_MODE','sheets')}
 function echoProfile_(row){return{id:row.user_id,handle:row.handle,display_name:row.display_name,avatar_path:row.avatar_path||null,created_at:row.created_at}}
 function echoAccount_(row){const expiry=row.premium_until?new Date(row.premium_until).toISOString():null;return{user_id:row.user_id,account_status:row.account_status,tier:row.tier==='premium'&&(!expiry||Date.parse(expiry)>Date.now())?'premium':'free',premium_until:expiry}}
@@ -1888,13 +1894,14 @@ function echoDataAction_(body,cache){
  if(action==='friends.request'){echoFields_(body,['person_id']);if(!echoId_(body.person_id)||body.person_id===uid||!users.rows.some(row=>row.user_id===body.person_id&&row.account_status==='active'))echoFailure_('INVALID_USER');const table=echoTable_('Friendships',cache);if(table.rows.some(row=>[uid,body.person_id].includes(row.requester_id)&&[uid,body.person_id].includes(row.addressee_id)))echoFailure_('FRIENDSHIP_EXISTS');table.put({id:Utilities.getUuid(),requester_id:uid,addressee_id:body.person_id,status:'pending',created_at:echoTime_()});return{}}
  if(action==='friends.accept'||action==='friends.remove'){echoFields_(body,['id']);const table=echoTable_('Friendships',cache),row=table.rows.find(item=>item.id===body.id);if(!row||!(action==='friends.accept'?row.addressee_id===uid:row.addressee_id===uid||row.requester_id===uid))echoFailure_('FORBIDDEN');if(action==='friends.accept'){row.status='accepted';table.put(row)}else table.remove(item=>item===row);return{}}
  if(action==='messages.read'||action==='messages.send'){const person=body.person_id;if(!echoId_(person)||!echoFriend_(cache,uid,person))echoFailure_('FRIENDS_REQUIRED');const table=echoTable_('Messages',cache);if(action==='messages.read'){echoFields_(body,['person_id','cursor']);const cursor=body.cursor;if(cursor&&(!echoId_(cursor.id)||!Number.isFinite(Date.parse(cursor.created_at))))echoFailure_('INVALID_CURSOR');return{messages:table.rows.filter(row=>((row.sender_id===uid&&row.recipient_id===person)||(row.sender_id===person&&row.recipient_id===uid))&&(!cursor||echoMessageOrder_(row,cursor)<0)).sort(echoMessageOrder_).reverse().slice(0,40).reverse().map(echoPublicRow_)}}echoFields_(body,['person_id','id','body','track']);if(!echoId_(body.id)||typeof body.body!=='string'||body.body.length>2000||(!body.body.trim()&&!body.track))echoFailure_('INVALID_MESSAGE');const track=body.track?echoTrack_(body.track):null,row=table.rows.find(item=>item.id===body.id);if(row){if(row.sender_id!==uid||row.recipient_id!==person||row.body!==body.body.trim()||JSON.stringify(row.track)!==JSON.stringify(track))echoFailure_('MESSAGE_CONFLICT');return{message:echoPublicRow_(row)}}const message={id:body.id,sender_id:uid,recipient_id:person,body:body.body.trim(),track,created_at:echoTime_()};table.put(message);return{message:echoPublicRow_(message)}}
+ if(['social.','danmaku.','rooms.'].some(prefix=>action.startsWith(prefix)))return echoCommunityAction_(body,user,cache);
  if(action.startsWith('avatar.')||action.startsWith('admin.'))return echoAvatarAction_(body,user,cache);
  echoFailure_('INVALID_REQUEST');
 }
 function echoUpdateName_(body,user,users){if(typeof body.handle!=='string'||!/^[a-z0-9_]{3,24}$/.test(body.handle)||typeof body.display_name!=='string'||!body.display_name.trim()||body.display_name.length>40)echoFailure_('INVALID_PROFILE');if(users.rows.some(row=>row!==user&&row.handle===body.handle))echoFailure_('HANDLE_TAKEN');user.handle=body.handle;user.display_name=body.display_name.trim()}
 function echoPlaylist_(row){const copy=echoPublicRow_(row);copy.playlist_items=(row.items||[]).map((track,position)=>({playlist_id:row.id,track_id:track.id,track,position}));delete copy.items;return copy}
 function echoMessageOrder_(a,b){const stamp=value=>new Date(value).toISOString().slice(0,19)+'.'+(String(value).match(/\.(\d+)/)?.[1]||'').padEnd(6,'0').slice(0,6);return stamp(a.created_at).localeCompare(stamp(b.created_at))||String(a.id).localeCompare(String(b.id))}
-function echoSheetsPost_(body){const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(PropertiesService.getScriptProperties().getProperty('ECHO_DATA_MODE')!=='sheets')echoFailure_('MIGRATION_NOT_ACTIVE');const cache={};return{ok:true,version:'3',...(body.action.startsWith('auth.')?echoAuthAction_(body,cache):echoDataAction_(body,cache))}}catch(error){const allowed=['UNAUTHORIZED','INVALID_REQUEST','INVALID_EMAIL','INVALID_PASSWORD','INVALID_CREDENTIALS','EMAIL_NOT_VERIFIED','RESET_REQUIRED','TOKEN_INVALID','RATE_LIMITED','ACCOUNT_INACTIVE','MIGRATION_NOT_ACTIVE','SCHEMA_NOT_READY','FORBIDDEN','INVALID_PROFILE','HANDLE_TAKEN','FRIENDS_REQUIRED','FRIENDSHIP_EXISTS','INVALID_USER','INVALID_QUERY','INVALID_PLAYLIST','INVALID_MESSAGE','INVALID_CURSOR','MESSAGE_CONFLICT','INVALID_TRACK','INVALID_AVATAR','AVATAR_STORAGE_UNAVAILABLE','VALUE_TOO_LARGE','ADMIN_REQUIRED','USER_NOT_FOUND','CURRENT_PASSWORD_REQUIRED','EMAIL_LIMIT'];return{ok:false,error:allowed.includes(error.message)?error.message:'SERVICE_UNAVAILABLE'}}finally{lock.releaseLock()}}
+function echoSheetsPost_(body){const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(PropertiesService.getScriptProperties().getProperty('ECHO_DATA_MODE')!=='sheets')echoFailure_('MIGRATION_NOT_ACTIVE');const cache={};return{ok:true,version:'4',...(body.action.startsWith('auth.')?echoAuthAction_(body,cache):echoDataAction_(body,cache))}}catch(error){const allowed=['UNAUTHORIZED','INVALID_REQUEST','INVALID_EMAIL','INVALID_PASSWORD','INVALID_CREDENTIALS','EMAIL_NOT_VERIFIED','RESET_REQUIRED','TOKEN_INVALID','RATE_LIMITED','ACCOUNT_INACTIVE','MIGRATION_NOT_ACTIVE','SCHEMA_NOT_READY','FORBIDDEN','INVALID_PROFILE','HANDLE_TAKEN','FRIENDS_REQUIRED','FRIENDSHIP_EXISTS','INVALID_USER','INVALID_QUERY','INVALID_PLAYLIST','INVALID_MESSAGE','INVALID_CURSOR','MESSAGE_CONFLICT','INVALID_TRACK','INVALID_AVATAR','AVATAR_STORAGE_UNAVAILABLE','VALUE_TOO_LARGE','ADMIN_REQUIRED','USER_NOT_FOUND','CURRENT_PASSWORD_REQUIRED','EMAIL_LIMIT','INVALID_SOCIAL_CONTENT','CONTENT_CONFLICT','SOCIAL_LIMIT','ROOM_UNAVAILABLE','ROOM_STALE'];return{ok:false,error:allowed.includes(error.message)?error.message:'SERVICE_UNAVAILABLE'}}finally{lock.releaseLock()}}
 
 function echoDigest_(text){return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(text),Utilities.Charset.UTF_8)).replace(/=+$/,'')}
 function echoRandom_(){return Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,'')}
@@ -1940,7 +1947,7 @@ function echoAuthAction_(body,cache){
  if(action==='auth.session'){echoFields_(body,[]);const auth=echoTable_('Auth',cache).rows.find(row=>row.user_id===uid);return{user:{id:uid,email:auth.email},profile:echoProfile_(user),account:echoAccount_(user),isAdmin:user.role==='admin'&&user.account_status==='active'}}
  if(action==='auth.signout'){echoFields_(body,[]);echoTable_('Sessions',cache).remove(row=>row.token_hash===echoDigest_(body.session_token));return{}}
  if(action==='auth.password'){echoFields_(body,['password','current_password']);const auth=echoTable_('Auth',cache).rows.find(row=>row.user_id===uid);echoThrottle_('password:'+uid,8,900000);if(!echoPasswordMatches_(body.current_password,auth.password_hash))echoFailure_('CURRENT_PASSWORD_REQUIRED');const hash=echoPasswordHash_(body.password);const now=echoTime_(),current=echoTable_('Sessions',cache).rows.find(row=>row.token_hash===echoDigest_(body.session_token));current.created_at=now;echoTable_('Sessions',cache).put(current);auth.password_hash=hash;auth.password_changed_at=now;echoTable_('Auth',cache).put(auth);echoTable_('Sessions',cache).remove(row=>row.user_id===uid&&row.token_hash!==echoDigest_(body.session_token));return{}}
- if(action==='auth.delete'){echoFields_(body,[]);if(user.role==='admin'&&echoTable_('Users',cache).rows.filter(row=>row.role==='admin').length===1)echoFailure_('FORBIDDEN');echoAvatarCall_({action:'purge',user_id:uid});for(const name of ['Sessions','Recovery','Auth','Likes','Playlists'])echoTable_(name,cache).remove(row=>row.user_id===uid);echoTable_('Friendships',cache).remove(row=>row.requester_id===uid||row.addressee_id===uid);echoTable_('Messages',cache).remove(row=>row.sender_id===uid||row.recipient_id===uid);echoTable_('Users',cache).remove(row=>row.user_id===uid);return{deleted:true}}
+ if(action==='auth.delete'){echoFields_(body,[]);if(user.role==='admin'&&echoTable_('Users',cache).rows.filter(row=>row.role==='admin').length===1)echoFailure_('FORBIDDEN');echoAvatarCall_({action:'purge',user_id:uid});echoCommunityDeleteUser_(cache,uid);for(const name of ['Sessions','Recovery','Auth','Likes','Playlists'])echoTable_(name,cache).remove(row=>row.user_id===uid);echoTable_('Friendships',cache).remove(row=>row.requester_id===uid||row.addressee_id===uid);echoTable_('Messages',cache).remove(row=>row.sender_id===uid||row.recipient_id===uid);echoTable_('Users',cache).remove(row=>row.user_id===uid);return{deleted:true}}
  echoFailure_('INVALID_REQUEST');
 }
 function echoDummyHash_(){const p=PropertiesService.getScriptProperties(),hash=echoPasswordHash_(echoRandom_());p.setProperty('ECHO_DUMMY_HASH',hash);return hash}
@@ -1962,4 +1969,169 @@ function echoAvatarAction_(body,user,cache){
   const old=target.avatar_path;target.avatar_path=path;target.synced_at=echoTime_();users.put(target);if(old&&old!==path)try{echoAvatarCall_({action:'remove',path:old})}catch{}return{profile:echoProfile_(target)};
  }
  echoFailure_('INVALID_REQUEST');
+}
+
+function echoSocialAudience_(cache, user) {
+ const users=echoTable_('Users',cache).rows, ids=new Set([user.user_id]);
+ for(const row of echoTable_('Friendships',cache).rows) if(row.status==='accepted') {
+  if(row.requester_id===user.user_id) ids.add(row.addressee_id);
+  if(row.addressee_id===user.user_id) ids.add(row.requester_id);
+ }
+ return new Set(users.filter(row=>ids.has(row.user_id)&&row.account_status==='active').map(row=>row.user_id));
+}
+function echoSocialText_(value,max,empty) {
+ if(typeof value!=='string'||value.length>max||(!empty&&!value.trim())) echoFailure_('INVALID_SOCIAL_CONTENT');
+ return value.trim();
+}
+function echoSocialTrack_(value) {
+ const track=echoTrack_(value);
+ if(!['sanctuary','hiraeth','childhood','moonlight'].includes(track.id)&&!/^youtube-[A-Za-z0-9_-]{11}$/.test(track.id)&&!/^audius-[a-zA-Z0-9]+$/.test(track.id)) echoFailure_('INVALID_TRACK');
+ return track;
+}
+function echoSocialPerson_(cache,id) {
+ const row=echoTable_('Users',cache).rows.find(user=>user.user_id===id);
+ return row?echoProfile_(row):null;
+}
+function echoSocialPage_(rows,cursor,limit) {
+ if(cursor&&(!echoId_(cursor.id)||!Number.isFinite(Date.parse(cursor.created_at)))) echoFailure_('INVALID_CURSOR');
+ const found=rows.filter(row=>!cursor||echoMessageOrder_(row,cursor)<0).sort(echoMessageOrder_).reverse();
+ return {items:found.slice(0,limit),hasMore:found.length>limit};
+}
+function echoSocialExisting_(table,id,uid,fields) {
+ if(!echoId_(id))echoFailure_('INVALID_REQUEST');
+ const row=table.rows.find(item=>item.id===id);
+ if(row&&(row.user_id!==uid||Object.entries(fields).some(([key,value])=>JSON.stringify(row[key])!==JSON.stringify(value)))) echoFailure_('CONTENT_CONFLICT');
+ return row;
+}
+function echoSocialLimit_(table,uid,max) {
+ if(table.rows.filter(row=>row.user_id===uid).length>=max)echoFailure_('SOCIAL_LIMIT');
+ echoThrottle_('social-write:'+uid,45,60000);
+}
+function echoDeletePost_(cache,id) {
+ echoTable_('PostComments',cache).remove(row=>row.post_id===id);
+ echoTable_('PostReactions',cache).remove(row=>row.post_id===id);
+ echoTable_('Posts',cache).remove(row=>row.id===id);
+}
+function echoRoomAccess_(cache,uid,id) {
+ const room=echoTable_('Rooms',cache).rows.find(row=>row.id===id),host=room&&echoTable_('Users',cache).rows.find(row=>row.user_id===room.host_id);
+ if(!room||room.closed||Date.parse(room.expires_at)<=Date.now()||host?.account_status!=='active')echoFailure_('ROOM_UNAVAILABLE');
+ if(room.host_id!==uid&&(!(room.members||[]).includes(uid)||!echoFriend_(cache,uid,room.host_id)))echoFailure_('FORBIDDEN');
+ return room;
+}
+function echoRoomPublic_(cache,room) {
+ const copy=echoPublicRow_(room);
+ copy.host=echoSocialPerson_(cache,room.host_id);
+ copy.members=(room.members||[]).filter(id=>echoFriend_(cache,id,room.host_id)).map(id=>echoSocialPerson_(cache,id)).filter(Boolean);
+ return copy;
+}
+function echoCommunityAction_(body,user,cache) {
+ const uid=user.user_id,action=body.action,audience=echoSocialAudience_(cache,user);
+ if(action==='social.status') {
+  echoFields_(body,[]);
+  for(const name of ['Posts','PostComments','PostReactions','Danmaku','Rooms','RoomMessages'])echoTable_(name,cache);
+  return {capabilities:['feed','danmaku','rooms'],server_time:echoTime_()};
+ }
+ if(action==='social.feed') {
+  echoFields_(body,['cursor']);
+  const page=echoSocialPage_(echoTable_('Posts',cache).rows.filter(row=>audience.has(row.user_id)),body.cursor,20);
+  const reactions=echoTable_('PostReactions',cache).rows,comments=echoTable_('PostComments',cache).rows;
+  return {posts:page.items.map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id),likes:reactions.filter(item=>item.post_id===row.id&&audience.has(item.user_id)).length,liked:reactions.some(item=>item.post_id===row.id&&item.user_id===uid),comments:comments.filter(item=>item.post_id===row.id&&audience.has(item.user_id)).length})),hasMore:page.hasMore};
+ }
+ if(action==='social.post') {
+  echoFields_(body,['id','body','track']);
+  const text=echoSocialText_(body.body,1000,true),track=body.track?echoSocialTrack_(body.track):null;
+  if(!text&&!track)echoFailure_('INVALID_SOCIAL_CONTENT');
+  const table=echoTable_('Posts',cache),existing=echoSocialExisting_(table,body.id,uid,{body:text,track});
+  if(existing)return {post:echoPublicRow_(existing)};
+  echoSocialLimit_(table,uid,200);
+  return {post:echoPublicRow_(table.put({id:body.id,user_id:uid,body:text,track,created_at:echoTime_()}))};
+ }
+ if(['social.delete','social.react','social.comments','social.comment','social.comment.delete'].includes(action)) {
+  const post=echoTable_('Posts',cache).rows.find(row=>row.id===body.post_id);
+  if(!post||(!audience.has(post.user_id)&&!(user.role==='admin'&&action==='social.delete')))echoFailure_('FORBIDDEN');
+  if(action==='social.delete') {
+   echoFields_(body,['post_id']);if(post.user_id!==uid&&user.role!=='admin')echoFailure_('FORBIDDEN');echoDeletePost_(cache,post.id);return {};
+  }
+  if(action==='social.react') {
+   echoFields_(body,['post_id','liked']);if(typeof body.liked!=='boolean')echoFailure_('INVALID_REQUEST');
+   const table=echoTable_('PostReactions',cache),row=table.rows.find(item=>item.post_id===post.id&&item.user_id===uid);
+   if(body.liked&&!row){echoSocialLimit_(table,uid,2000);table.put({id:Utilities.getUuid(),post_id:post.id,user_id:uid,created_at:echoTime_()})}
+   if(!body.liked&&row)table.remove(item=>item===row);
+   return {liked:body.liked};
+  }
+  const table=echoTable_('PostComments',cache);
+  if(action==='social.comments') {
+   echoFields_(body,['post_id','cursor']);const page=echoSocialPage_(table.rows.filter(row=>row.post_id===post.id&&audience.has(row.user_id)),body.cursor,30);
+   return {comments:page.items.map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id)})),hasMore:page.hasMore};
+  }
+  if(action==='social.comment.delete') {
+   echoFields_(body,['post_id','id']);const row=table.rows.find(item=>item.post_id===post.id&&item.id===body.id);
+   if(!row||(row.user_id!==uid&&post.user_id!==uid&&user.role!=='admin'))echoFailure_('FORBIDDEN');table.remove(item=>item===row);return {};
+  }
+  echoFields_(body,['post_id','id','body']);const text=echoSocialText_(body.body,500,false),existing=echoSocialExisting_(table,body.id,uid,{post_id:post.id,body:text});
+  if(existing)return {comment:echoPublicRow_(existing)};
+  echoSocialLimit_(table,uid,1000);return {comment:echoPublicRow_(table.put({id:body.id,post_id:post.id,user_id:uid,body:text,created_at:echoTime_()}))};
+ }
+ if(action.startsWith('danmaku.')) {
+  if(typeof body.track_id!=='string'||body.track_id.length>100||!body.track_id)echoFailure_('INVALID_TRACK');
+  const table=echoTable_('Danmaku',cache);
+  if(action==='danmaku.read') {
+   echoFields_(body,['track_id']);return {messages:table.rows.filter(row=>row.track_id===body.track_id&&audience.has(row.user_id)).sort(echoMessageOrder_).slice(-150).map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id)}))};
+  }
+  if(action==='danmaku.delete') {
+   echoFields_(body,['track_id','id']);const row=table.rows.find(item=>item.id===body.id&&item.track_id===body.track_id);
+   if(!row||(row.user_id!==uid&&user.role!=='admin'))echoFailure_('FORBIDDEN');table.remove(item=>item===row);return {};
+  }
+  if(action!=='danmaku.send')echoFailure_('INVALID_REQUEST');
+  echoFields_(body,['track_id','id','body','position']);const text=echoSocialText_(body.body,100,false);
+  if(typeof body.position!=='number'||!Number.isFinite(body.position)||body.position<0||body.position>43200)echoFailure_('INVALID_REQUEST');
+  const fields={track_id:body.track_id,body:text,position:Math.round(body.position*10)/10},existing=echoSocialExisting_(table,body.id,uid,fields);
+  if(existing)return {message:echoPublicRow_(existing)};
+  echoSocialLimit_(table,uid,500);return {message:echoPublicRow_(table.put({id:body.id,user_id:uid,...fields,created_at:echoTime_()}))};
+ }
+ if(action==='rooms.list') {
+  echoFields_(body,[]);return {rooms:echoTable_('Rooms',cache).rows.filter(row=>!row.closed&&Date.parse(row.expires_at)>Date.now()&&(row.host_id===uid||(row.members||[]).includes(uid)&&audience.has(row.host_id))).map(row=>echoRoomPublic_(cache,row))};
+ }
+ if(action==='rooms.create') {
+  echoFields_(body,['id','name','members','track','position','playing']);
+  if(!echoId_(body.id)||!Array.isArray(body.members)||!body.members.length||body.members.length>12||new Set(body.members).size!==body.members.length||body.members.some(id=>!echoFriend_(cache,uid,id)||!audience.has(id)))echoFailure_('FRIENDS_REQUIRED');
+  const name=echoSocialText_(body.name,60,false),track=echoSocialTrack_(body.track);
+  if(typeof body.position!=='number'||!Number.isFinite(body.position)||body.position<0||body.position>43200||typeof body.playing!=='boolean')echoFailure_('INVALID_REQUEST');
+  const table=echoTable_('Rooms',cache),existing=table.rows.find(row=>row.id===body.id);
+  if(existing){if(existing.host_id!==uid)echoFailure_('CONTENT_CONFLICT');return {room:echoRoomPublic_(cache,echoRoomAccess_(cache,uid,existing.id)),server_time:echoTime_()}}
+  const expired=table.rows.filter(row=>Date.parse(row.expires_at)<=Date.now()).map(row=>row.id);echoTable_('RoomMessages',cache).remove(row=>expired.includes(row.room_id));table.remove(row=>expired.includes(row.id));
+  if(table.rows.filter(row=>row.host_id===uid&&!row.closed).length>=3)echoFailure_('SOCIAL_LIMIT');echoThrottle_('rooms-create:'+uid,5,60000);
+  const time=echoTime_(),room=table.put({id:body.id,host_id:uid,name,members:body.members,track,position:body.position,playing:body.playing,revision:1,updated_at:time,created_at:time,expires_at:new Date(Date.now()+86400000).toISOString(),closed:false});
+  return {room:echoRoomPublic_(cache,room),server_time:echoTime_()};
+ }
+ if(action.startsWith('rooms.')) {
+  const room=echoRoomAccess_(cache,uid,body.id),table=echoTable_('Rooms',cache);
+  if(action==='rooms.read') {
+   echoFields_(body,['id']);return {room:echoRoomPublic_(cache,room),messages:echoTable_('RoomMessages',cache).rows.filter(row=>row.room_id===room.id&&(row.user_id===room.host_id||(room.members||[]).includes(row.user_id)&&echoFriend_(cache,row.user_id,room.host_id))).sort(echoMessageOrder_).slice(-40).map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id)})),server_time:echoTime_()};
+  }
+  if(action==='rooms.leave') {
+   echoFields_(body,['id']);if(uid===room.host_id){room.closed=true;echoTable_('RoomMessages',cache).remove(row=>row.room_id===room.id)}else room.members=room.members.filter(id=>id!==uid);table.put(room);return {};
+  }
+  if(action==='rooms.update') {
+   echoFields_(body,['id','revision','track','position','playing']);if(uid!==room.host_id)echoFailure_('FORBIDDEN');
+   if(body.revision!==room.revision)echoFailure_('ROOM_STALE');
+   if(typeof body.position!=='number'||!Number.isFinite(body.position)||body.position<0||body.position>43200||typeof body.playing!=='boolean')echoFailure_('INVALID_REQUEST');
+   room.track=echoSocialTrack_(body.track);room.position=body.position;room.playing=body.playing;room.updated_at=echoTime_();room.revision++;table.put(room);return {room:echoRoomPublic_(cache,room),server_time:echoTime_()};
+  }
+  if(action==='rooms.message') {
+   echoFields_(body,['id','message_id','body']);const text=echoSocialText_(body.body,500,false),messages=echoTable_('RoomMessages',cache),existing=echoSocialExisting_(messages,body.message_id,uid,{room_id:room.id,body:text});
+   if(existing)return {message:echoPublicRow_(existing)};
+   echoThrottle_('room-message:'+uid,30,60000);
+   const rows=messages.rows.filter(row=>row.room_id===room.id).sort(echoMessageOrder_);if(rows.length>=200)messages.remove(row=>row===rows[0]);
+   return {message:echoPublicRow_(messages.put({id:body.message_id,room_id:room.id,user_id:uid,body:text,created_at:echoTime_()}))};
+  }
+ }
+ echoFailure_('INVALID_REQUEST');
+}
+function echoCommunityDeleteUser_(cache,uid) {
+ for(const post of echoTable_('Posts',cache).rows.filter(row=>row.user_id===uid))echoDeletePost_(cache,post.id);
+ for(const name of ['PostComments','PostReactions','Danmaku'])echoTable_(name,cache).remove(row=>row.user_id===uid);
+ const rooms=echoTable_('Rooms',cache),owned=rooms.rows.filter(row=>row.host_id===uid).map(row=>row.id);
+ echoTable_('RoomMessages',cache).remove(row=>row.user_id===uid||owned.includes(row.room_id));rooms.remove(row=>owned.includes(row.id));
+ for(const room of rooms.rows)if((room.members||[]).includes(uid)){room.members=room.members.filter(id=>id!==uid);rooms.put(room)}
 }

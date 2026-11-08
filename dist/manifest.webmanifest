@@ -8,8 +8,8 @@
   "theme_color": "#121212",
   "icons": [
     {
-      "src": "assets/brand/Logo_Lighttheme.png",
-      "sizes": "1750x1750",
+      "src": "assets/fav.png",
+      "sizes": "1000x1000",
       "type": "image/png",
       "purpose": "any"
     }

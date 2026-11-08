@@ -1,6 +1,62 @@
 'use strict';
 (() => {
- const rows=`返回\tBack
+ const rows=`返回听歌房，正在跟随\tReturn to room, following the host
+社交与互动\tSocial and interaction
+音乐动态\tMusic feed
+歌曲弹幕\tSong comments
+一起听歌房\tListening rooms
+好友聊天\tFriend chat
+关闭后隐藏入口并停止刷新；已有动态和消息不会删除。\tTurning a feature off hides it and stops refreshes. Existing posts and messages remain.
+返回听歌房\tReturn to room
+听友圈\tFriends feed
+好友动态\tFriend activity
+分享此刻的音乐\tShare your music moment
+添加正在播放\tAttach current song
+发布\tPost
+评论\tComment
+刷新动态\tRefresh activity
+更早的评论\tOlder comments
+弹幕\tSong comments
+分享一首歌，开始你们的音乐动态。\tShare a song to start your music feed.
+社交服务需要更新至版本 4，请联系管理员。\tThe social service needs version 4. Please contact the administrator.
+下载后端更新包\tDownload backend update
+互动功能需要连接 Google Sheets 账号服务。\tConnect Google Sheets accounts to use social features.
+互动功能已关闭。\tThis social feature is turned off.
+互动功能已关闭\tSocial features are off
+可在设置中重新开启。\tYou can enable them in Settings.
+登录后与好友互动\tSign in to join your friends
+音乐动态、弹幕和听歌房仅对好友开放。\tMusic posts, song comments and listening rooms are for friends only.
+连接失败，请重试。\tConnection failed. Please retry.
+创建听歌房\tCreate room
+邀请好友\tInvite friends
+一起听歌\tListen together
+房间名称\tRoom name
+选择好友（最多 12 位）\tChoose friends (up to 12)
+邀请好友一起听歌、聊天。每人使用自己的播放连接，播放进度定期同步。\tInvite friends to listen and chat. Each person plays on their own device; playback positions sync periodically.
+还没有听歌房。邀请好友一起听歌吧。\tNo rooms yet. Invite a friend to listen with you.
+正在听歌\tListening together
+结束听歌房\tEnd room
+离开听歌房\tLeave room
+停止跟随\tStop following
+开始跟随\tStart following
+立即同步\tSync now
+房间消息\tRoom message
+你是房主，播放操作会同步给好友。\tYou are the host. Your playback controls are shared with friends.
+正在跟随房主，播放进度定期同步。\tFollowing the host. Playback positions sync periodically.
+点击开始跟随，允许此设备播放。\tTap Start following to enable playback on this device.
+本机音乐无法同步，请选择音乐库歌曲。\tLocal files cannot sync. Choose a song from the music library.
+仅好友可见，在对应的歌曲进度显示。\tVisible to friends at the matching song position.
+弹幕内容\tYour song comment
+请选择 1–12 位好友。\tChoose 1–12 friends.
+听歌房已关闭。\tThis listening room is closed.
+歌曲已切换，请重新打开弹幕。\tThe song changed. Open song comments again.
+请检查内容长度。\tPlease check the content length.
+内容编号已被使用，请重新发送。\tThis content ID was used. Please send again.
+已达到互动内容上限，请删除一些旧内容后重试。\tThe social content limit is reached. Delete some older content and retry.
+听歌房已结束或已过期。\tThe listening room ended or expired.
+房间状态已改变，请重新同步。\tThe room changed. Sync again.
+动态、评论和弹幕对当前已确认的好友可见；听歌房只对房主和受邀好友开放。移除好友会撤销访问。关闭设置仅停止本机入口、刷新和跟随，不会删除已发布内容。你可以删除自己的动态、评论和弹幕，动态作者也可删除其动态下的评论。听歌房 24 小时后过期；结束房间会清除房间聊天。社交数据保存在私有 Google Sheet，运营者可读取，未使用端到端加密。互动草稿只保存在页面内存中。\tPosts, comments and timed song comments are visible to current confirmed friends. Listening rooms are limited to the host and invited friends. Removing a friend revokes access. Turning features off stops local entrances, refreshes and following; it does not delete published content. You can delete your posts and comments, and post authors can remove comments on their posts. Rooms expire after 24 hours; ending a room clears its chat. Social data is stored in the private Google Sheet, accessible to the operator without end-to-end encryption. Drafts stay in page memory.
+返回\tBack
 原有账号已迁移，请先通过「忘记密码」设置新密码。\tExisting accounts have moved. Use Forgot password to set your new password first.
 如果邮箱已注册，会收到重设密码的邮件。链接有效期为 30 分钟，仅可使用一次。\tIf the email is registered, a password-reset message will arrive. The link expires in 30 minutes and works once.
 邮箱密码登录、邮箱验证、密码修改和重设由 Apps Script 处理。账号和密码哈希保存在运营者的私有 Google Sheet，密码明文不会写入表格，会话和重设令牌只保存哈希。原有用户 ID 保持不变，首次使用迁移后的账号需通过邮件设置新密码。\tApps Script handles email/password sign-in, email verification, password changes and recovery. Accounts and password hashes are stored in the operator’s private Google Sheet. Plaintext passwords are never written to the workbook; only hashes of session and recovery tokens are stored. Existing user IDs stay the same. Existing users set a new password by email for their first sign-in after migration.
