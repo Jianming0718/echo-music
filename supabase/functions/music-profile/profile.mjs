@@ -12,7 +12,7 @@ function card(item,kind){const row=item.musicTwoRowItemRenderer;if(!row)return n
 export function parseArtist(payload,id){
  const header=headerOf(payload),albums=new Map(),singles=new Map();let description='';
  walk(payload,node=>{if(node.musicDescriptionShelfRenderer&&!description)description=text(node.musicDescriptionShelfRenderer.description).trim();const shelf=node.musicCarouselShelfRenderer||node.musicShelfRenderer;if(!shelf)return;const title=text(shelf.header?.musicCarouselShelfBasicHeaderRenderer?.title||shelf.title).toLowerCase();const kind=/singles|单曲|單曲|eps/.test(title)?'single':/albums|专辑|專輯/.test(title)?'album':null;if(!kind)return;for(const item of shelf.contents||[]){const record=card(item,kind);if(record)(kind==='album'?albums:singles).set(record.id,record)}});
- return{id,name:text(header.title).trim().slice(0,300),cover:thumbnails(header.thumbnail||header.foregroundThumbnail||header.backgroundThumbnail||header),description:description?description.slice(0,900):null,albums:[...albums.values()].slice(0,80),singles:[...singles.values()].slice(0,80),url:'https://music.youtube.com/channel/'+id};
+ return{id,name:text(header.title).trim().slice(0,300),cover:thumbnails(header.thumbnail||header.foregroundThumbnail||header.backgroundThumbnail||header),description:description||null,albums:[...albums.values()].slice(0,80),singles:[...singles.values()].slice(0,80),url:'https://music.youtube.com/channel/'+id};
 }
 export function parseRelease(payload,id){
  const header=headerOf(payload),title=text(header.title).trim(),artist=artistRun(header),name=text(artist)||text(header.straplineTextOne).trim(),year=(text(header.subtitle)+' '+text(header.secondSubtitle)).match(/\b(?:19|20)\d{2}\b/)?.[0]||null,cover=thumbnails(header.thumbnail||header);

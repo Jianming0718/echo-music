@@ -1,21 +1,39 @@
-# Echo Apps Script version 4
+# Echo Apps Script version 5
 
-The website uses private Google Sheets for accounts and social data. Version 4 adds friends-only music posts, likes, comments, timed song comments, and invitation-only listening rooms. Production remains on version 3 until the owner updates the existing deployment. The website reports this clearly; existing login, music and private chat remain usable while upgrading.
+The website uses private Google Sheets for accounts and social data. Version 4 supplies friends-only music posts, comments, timed song comments and listening rooms. Version 5 adds complete member administration and Premium redemption. The website reports this clearly; existing login, music and private chat remain usable while upgrading.
 
 Private management sheet: https://docs.google.com/spreadsheets/d/1mn55LJ8osh3hMM9SANLTb3OgT8iNCtQt8vaSsuiqZ0U/edit
 
 Existing web app: https://script.google.com/macros/s/AKfycbzyabVdmmaYivsQ-ji_vHVVz6EzSxMG8wFKjj5WGW4TX7SvKkNb34HTuRktlNyo1jIdNg/exec
 
-## Upgrade the current project from version 3
+## Upgrade the current project from version 4
 
-1. Open the existing Apps Script project. Replace the entire **Code.gs** with the complete **Code.gs** from this package. Do not add the separate source modules to the editor. Keep **Config.gs**, the manifest, all Script Properties, and the existing deployment URL.
-2. Select **installEchoSheets** and click **Run**. This adds six missing tabs: Posts, PostComments, PostReactions, Danmaku, Rooms, and RoomMessages. It preserves existing account records, passwords, administrator roles, membership/status columns, the private password pepper, and `ECHO_DATA_MODE=sheets`. It sends no email. Do not set the mode back to staged, and do not import old migration snapshots.
-3. **Deploy → Manage deployments → Edit the original Web app → New version → Deploy.** Keep Execute as yourself and access Anyone. The URL must remain the same `/exec` URL.
-4. Open the `/exec` URL. Verify `version: "4"`, `mode: "sheets"`, and `schemaReady`, `passwordReady`, `avatarReady` all true. Capabilities should include feed, danmaku and rooms. Refresh Echo and open Friends.
+1. Open the existing Apps Script project. Replace the entire **Code.gs** with the complete **Code.gs** in this package. Do not paste the separate source modules into the editor. Keep **Config.gs**, the manifest, all Script Properties and the original deployment URL.
+2. Select **installEchoSheets** and click **Run**. Version 5 adds **RedemptionCodes** and **Redemptions**. Existing account/social tabs, password hashes, sessions, roles, status, membership dates, private password pepper, and `ECHO_DATA_MODE=sheets` are preserved. This sends no email. Do not re-import migration snapshots or change the mode to staged.
+3. **Deploy → Manage deployments → Edit the original Web app → New version → Deploy.** Keep Execute as yourself and access Anyone, with the same `/exec` URL.
+4. Confirm health version **5**, mode **sheets**, and schemaReady/passwordReady/avatarReady all true. Capabilities include member_admin and redemption. Refresh Echo.
 
-中文：用本安装包完整 Code.gs 替换原文件；运行 installEchoSheets；在原部署中选择「新版本」发布。Config.gs、脚本属性、部署 URL 和现有资料保持原样。无需再次迁移账号或运行 activateEchoSheets。
+中文：替换完整 Code.gs，运行 installEchoSheets，在原部署里发布「新版本」。Config.gs、脚本属性、部署 URL 和所有现有数据保持原样。不需要重新迁移账号或运行 activateEchoSheets。
 
-The current Google connector cannot edit or publish an Apps Script project. Updating this Drive ZIP does not update the running Web app.
+The current Google connector cannot edit or publish Apps Script. Updating the Drive ZIP alone does not update the running service. Production remains version 4 until the owner deploys this update; the new frontend gives a clear version-5 requirement and retains basic profile editing while waiting.
+
+## Member administration
+
+Authenticated, active administrators can edit display name, handle, email, account status, tier, Premium expiry, role and profile photo (upload/copy/remove). User IDs, registration times, password/session/recovery hashes and private keys are system-managed. No plaintext password is displayed or editable. Profiles returned to normal users still exclude private email and role fields.
+
+Server-side role checks run on every operation. Updates carry a version digest; stale profile/authority values are rejected instead of overwriting another edit. At least one active administrator must remain, including when deleting an administrator account. Ordinary profile updates still preserve administrator-owned status, tier and role cells.
+
+Email changes update Users and Auth, require verification by password reset to the new email, revoke existing sessions and invalidate old recovery links. Saving an email change sends no automatic mail. An explicit two-click administrator button sends the reset email. Suspension/disable revokes current sessions; membership and status are always enforced by the backend.
+
+## Redemption center
+
+Administrators generate 1–20 codes per batch, with 1–3650 Premium days, 1–10000 total uses per code, an optional redemption deadline and a label. Set uses to 1 for single-use codes; larger values permit multiple accounts. Each account can redeem a given code only once. Each code has 128 bits of browser-generated cryptographic randomness, and creation retries reuse the batch identifiers. Full codes appear only in the authenticated creation result and can be copied/downloaded; they are not stored in localStorage. The sheet stores only SHA-256 hashes and a six-character hint. Save full codes before leaving the page. Codes can be disabled and re-enabled.
+
+Redemption runs under the existing Apps Script lock. Validation checks active account, code format/hash, enabled state, deadline, per-account uniqueness and total uses. Successful claims extend an existing valid Premium expiry, or start from the redemption time. Indefinite Premium is preserved instead of becoming time-limited. The code deadline and the resulting membership expiry are separate concepts.
+
+A pending/applied journal reserves code usage before granting membership. Retrying an uncertain result resumes the same claim instead of adding days twice. A newer administrator membership change is preserved; a pending grant cannot overwrite it. History also settles interrupted claims where safe. Sheet operations are not a transactional database, so validation and journal recovery address partial writes; the workbook owner can inspect the private records for exceptional manual repair.
+
+Redemption history is owner-only. Administrators can view code configuration and used counts, never recover full codes from their hashes. Deleting a member removes their ID from claims while retaining anonymous consumption counts, so used codes do not become reusable. No real codes were created, no real membership was changed and no real reset email was sent during development.
 
 ## Social behavior and limits
 

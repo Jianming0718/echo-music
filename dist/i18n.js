@@ -1,6 +1,76 @@
 'use strict';
 (() => {
- const rows=`会员状态\tMembership
+ const rows=`邮箱已更新，请使用新邮箱重设密码后登录。\tEmail updated. Reset your password using the new email before signing in.
+兑换码仅保存哈希；生成者需自行保存完整兑换码。兑换记录保存用户编号、会员天数和到期时间。删除账号后会移除记录中的用户编号，并保留匿名使用次数以防止兑换码超额使用。管理员可修改账号资料、会员及角色；修改邮箱会撤销现有会话，并要求通过新邮箱重设密码。\tOnly hashes of redemption codes are stored. Creators must save the full codes themselves. Claims store account IDs, granted days and expiry times. Deleting an account removes its ID from claims while retaining anonymous usage counts to enforce limits. Administrators can edit accounts, membership and roles. Email changes revoke existing sessions and require a password reset through the new email.
+可编辑邮箱、会员、账号状态、角色和头像。系统编号及注册时间只读。\tEdit email, membership, account status, role and photo. Account IDs and registration times are read-only.
+更新账号服务至版本 5 后可编辑会员和邮箱。\tUpdate the account service to version 5 to edit membership and email.
+兑换码管理\tRedemption codes
+用户编号\tUser ID
+注册时间\tRegistration time
+邮箱已验证\tEmail verified
+邮箱待验证\tEmail awaiting verification
+修改邮箱会退出该用户的现有登录；用户需使用新邮箱重设密码后登录。\tChanging email signs this user out. They must reset their password using the new email before signing in.
+账号状态\tAccount status
+正常\tActive
+暂停\tSuspended
+停用\tDisabled
+会员等级\tMembership tier
+会员到期时间（本地时区）\tMembership expiry (local time)
+Premium 未填写到期时间表示不设到期日。\tPremium without an expiration date has no expiry.
+账号角色\tAccount role
+普通成员\tMember
+上传新头像\tUpload a new photo
+选择头像\tChoose a photo
+发送重设密码邮件\tSend password-reset email
+请先保存邮箱修改。\tSave the email change first.
+确认发送重设密码邮件\tConfirm password-reset email
+重设密码邮件已发送。\tPassword-reset email sent.
+账号已更新，请重新登录。\tAccount updated. Please sign in again.
+用户资料已保存。新邮箱需通过重设密码完成验证。\tUser saved. Reset the password to verify the new email.
+这个邮箱已被使用。\tThis email is already in use.
+必须保留至少一个正常的管理员账号。\tKeep at least one active administrator.
+用户资料已改变，请重新加载后再编辑。\tThe user changed. Reload before editing.
+请检查会员和账号设置。\tCheck the membership and account settings.
+兑换码格式不正确。\tInvalid redemption code format.
+请检查兑换码的天数、次数和截止日期。\tCheck the code duration, usage limit and deadline.
+兑换码无效、已停用、已过期或次数已用完。\tThis code is invalid, disabled, expired or fully used.
+当前 Premium 不设到期日，无需兑换。\tYour Premium has no expiry; no redemption is needed.
+会员资料已改变，此次兑换未继续，请联系管理员。\tMembership changed. This redemption did not continue; contact the administrator.
+无截止日期\tNo deadline
+兑换服务需要更新至版本 5，请联系管理员。\tRedemption requires service version 5. Contact the administrator.
+Premium 天数\tPremium days
+已用 / 可用次数\tUsed / total uses
+兑换截止\tRedeem by
+停用兑换码\tDisable code
+启用兑换码\tEnable code
+每个账号对同一码仅能兑换一次。可用次数设为 1 即为单人单次码。\tEach account can redeem a code once. Set total uses to 1 for a single-use code.
+备注\tLabel
+每码可用次数\tUses per code
+生成数量\tNumber of codes
+兑换截止（本地时区）\tRedemption deadline (local time)
+兑换截止限制何时可以使用兑换码；Premium 天数从当前有效会员到期日顺延，或从兑换时起计算。\tThe deadline limits when a code can be redeemed. Premium days extend an active membership or begin at redemption.
+生成兑换码\tGenerate codes
+已创建的兑换码\tCreated codes
+还没有兑换码。\tNo redemption codes yet.
+请保存本次兑换码\tSave these codes
+完整兑换码仅在本次生成后显示，关闭页面后无法重新查看。\tFull codes are shown only after generation. Save them before leaving this page.
+复制兑换码\tCopy codes
+下载兑换码\tDownload codes
+兑换记录\tRedemption history
+天 Premium\tPremium days
+会员到期\tMembership expiry
+兑换中心\tRedemption center
+兑换码\tRedemption code
+兑换 Premium\tRedeem Premium
+每个账号对同一码仅能兑换一次。已有有效 Premium 会顺延到期时间。\tEach account can redeem a code once. Active Premium memberships are extended.
+刷新兑换记录\tRefresh redemption history
+无法复制，请下载兑换码。\tCopying is unavailable. Download the codes instead.
+兑换码已复制。\tCodes copied.
+此码已兑换过，未重复增加天数。\tThis code was already redeemed. No duplicate days were added.
+兑换成功，会员已更新。\tCode redeemed. Membership updated.
+每次可生成 1–20 个兑换码。\tGenerate 1–20 codes at a time.
+兑换码已生成，请保存。\tCodes generated. Save them now.
+会员状态\tMembership
 会员资料待刷新\tMembership status unavailable
 Premium 已到期\tPremium expired
 到期时间\tExpires

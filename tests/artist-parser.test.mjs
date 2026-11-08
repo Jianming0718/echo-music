@@ -17,3 +17,8 @@ const conflicting=await enrichDates(profile,{artist:'Jin'},async url=>Response.j
 const localized=await enrichDates({...album,title:'The Astronaut',releaseDate:'2022'},{artist:'진 (Jin)',title:'The Astronaut'},async url=>Response.json({results:new URL(url).pathname==='/search'?[{artistId:42,artistName:'JIN',trackName:'The Astronaut'}]:[{wrapperType:'collection',artistId:42,artistName:'JIN',collectionName:'The Astronaut - Single',releaseDate:'2022-10-28T07:00:00Z'}]}));assert.equal(localized.releaseDate,'2022-10-28');assert.equal(localized.datePrecision,'day');
 const differentEdition=await enrichDates(profile,{artist:'Jin'},async url=>Response.json({results:new URL(url).pathname==='/search'?[{artistId:42,artistName:'JIN'}]:[{wrapperType:'collection',artistId:42,artistName:'JIN',collectionName:'Echo',releaseDate:'2026-05-16T00:00:00Z'}]}));assert.equal(differentEdition.albums[0].releaseDate,'2025');assert.equal(differentEdition.albums[0].datePrecision,'year');
 console.log('PASS artist/release parsers separate albums and singles, retain stable IDs, reject play counts as artist names, and only enrich unambiguous real dates');
+
+const completeBiography=('完整简介 🎵 A provider biography with all its words.\n').repeat(100)+'Final sentence is preserved.';
+const full=parseArtist({header:{musicImmersiveHeaderRenderer:{title:text('IU')}},contents:[{musicDescriptionShelfRenderer:{description:{runs:[{text:completeBiography.slice(0,1300)},{text:completeBiography.slice(1300)}]}}}]},artistId);
+assert.equal(full.description,completeBiography);
+console.log('PASS complete multi-run artist biographies preserve all text and Unicode beyond the former 900-character limit');

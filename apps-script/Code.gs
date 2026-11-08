@@ -1845,7 +1845,9 @@ const ECHO_TABLES={
  PostReactions:['id','post_id','user_id','created_at'],
  Danmaku:['id','track_id','user_id','body','position','created_at'],
  Rooms:['id','host_id','name','members','track','position','playing','revision','updated_at','created_at','expires_at','closed'],
- RoomMessages:['id','room_id','user_id','body','created_at']
+ RoomMessages:['id','room_id','user_id','body','created_at'],
+ RedemptionCodes:['id','code_hash','code_hint','label','days','max_uses','expires_at','enabled','created_by','created_at'],
+ Redemptions:['id','code_id','user_id','days','previous_tier','previous_until','premium_until','state','created_at','applied_at']
 };
 const ECHO_JSON_COLUMNS={Likes:['track'],Playlists:['items'],Messages:['track'],Posts:['track'],Rooms:['members','track']};
 function echoFailure_(code){throw Error(code)}
@@ -1865,9 +1867,9 @@ function installEchoSheets(){
  for(const [name,headers]of Object.entries(ECHO_TABLES)){let sheet=book.getSheetByName(name);if(!sheet)sheet=book.insertSheet(name);const existing=sheet.getLastRow()?sheet.getRange(1,1,1,headers.length).getValues()[0]:[];if(existing.some((value,i)=>value&&value!==headers[i]))throw Error('Unexpected headers in '+name);sheet.getRange(1,1,1,headers.length).setValues([headers]);sheet.setFrozenRows(1)}
  if(!p.getProperty('ECHO_PASSWORD_PEPPER'))p.setProperty('ECHO_PASSWORD_PEPPER',Utilities.getUuid()+Utilities.getUuid()+Utilities.getUuid());
  if(!p.getProperty('ECHO_DATA_MODE'))p.setProperty('ECHO_DATA_MODE','staged');
- if(!p.getProperty('ECHO_DUMMY_HASH'))echoDummyHash_();p.setProperty('ECHO_SHEETS_VERSION','4');try{echoAvatarCall_({action:'sign',paths:[]});p.setProperty('ECHO_AVATAR_READY','true')}catch{p.setProperty('ECHO_AVATAR_READY','false');throw Error('Avatar connection failed. Check that ECHO_ADMIN_HOOK_KEY matches the existing Supabase secret; do not share the key in chat.')}
+ if(!p.getProperty('ECHO_DUMMY_HASH'))echoDummyHash_();p.setProperty('ECHO_SHEETS_VERSION','5');try{echoAvatarCall_({action:'sign',paths:[]});p.setProperty('ECHO_AVATAR_READY','true')}catch{p.setProperty('ECHO_AVATAR_READY','false');throw Error('Avatar connection failed. Check that ECHO_ADMIN_HOOK_KEY matches the existing Supabase secret; do not share the key in chat.')}
 }
-function echoSheetsHealth_(){const p=PropertiesService.getScriptProperties();let schemaReady=false;try{const cache={};for(const name of Object.keys(ECHO_TABLES))echoTable_(name,cache);schemaReady=true}catch{}return{version:'4',schemaReady,passwordReady:Boolean(p.getProperty('ECHO_PASSWORD_PEPPER')),avatarReady:p.getProperty('ECHO_AVATAR_READY')==='true',mode:p.getProperty('ECHO_DATA_MODE')||'staged',capabilities:['sheet_data','password_auth','avatar_storage',...(schemaReady?['feed','danmaku','rooms']:[])]}}
+function echoSheetsHealth_(){const p=PropertiesService.getScriptProperties();let schemaReady=false;try{const cache={};for(const name of Object.keys(ECHO_TABLES))echoTable_(name,cache);schemaReady=true}catch{}return{version:'5',schemaReady,passwordReady:Boolean(p.getProperty('ECHO_PASSWORD_PEPPER')),avatarReady:p.getProperty('ECHO_AVATAR_READY')==='true',mode:p.getProperty('ECHO_DATA_MODE')||'staged',capabilities:['sheet_data','password_auth','avatar_storage',...(schemaReady?['feed','danmaku','rooms','member_admin','redemption']:[])]}}
 function activateEchoSheets(){const health=echoSheetsHealth_();if(!health.schemaReady||!health.passwordReady||!health.avatarReady)throw Error('Run installEchoSheets and import migration data first');const cache={},users=echoTable_('Users',cache).rows,auth=echoTable_('Auth',cache).rows;if(!users.length||users.some(user=>!auth.some(row=>row.user_id===user.user_id&&String(row.email).toLowerCase()===String(user.email).toLowerCase()))||!users.some(user=>user.role==='admin'))throw Error('Migration users or administrator missing');PropertiesService.getScriptProperties().setProperty('ECHO_DATA_MODE','sheets')}
 function echoProfile_(row){return{id:row.user_id,handle:row.handle,display_name:row.display_name,avatar_path:row.avatar_path||null,created_at:row.created_at}}
 function echoAccount_(row){const expiry=row.premium_until?new Date(row.premium_until).toISOString():null;return{user_id:row.user_id,account_status:row.account_status,tier:row.tier==='premium'&&(!expiry||Date.parse(expiry)>Date.now())?'premium':'free',premium_until:expiry}}
@@ -1895,13 +1897,14 @@ function echoDataAction_(body,cache){
  if(action==='friends.accept'||action==='friends.remove'){echoFields_(body,['id']);const table=echoTable_('Friendships',cache),row=table.rows.find(item=>item.id===body.id);if(!row||!(action==='friends.accept'?row.addressee_id===uid:row.addressee_id===uid||row.requester_id===uid))echoFailure_('FORBIDDEN');if(action==='friends.accept'){row.status='accepted';table.put(row)}else table.remove(item=>item===row);return{}}
  if(action==='messages.read'||action==='messages.send'){const person=body.person_id;if(!echoId_(person)||!echoFriend_(cache,uid,person))echoFailure_('FRIENDS_REQUIRED');const table=echoTable_('Messages',cache);if(action==='messages.read'){echoFields_(body,['person_id','cursor']);const cursor=body.cursor;if(cursor&&(!echoId_(cursor.id)||!Number.isFinite(Date.parse(cursor.created_at))))echoFailure_('INVALID_CURSOR');return{messages:table.rows.filter(row=>((row.sender_id===uid&&row.recipient_id===person)||(row.sender_id===person&&row.recipient_id===uid))&&(!cursor||echoMessageOrder_(row,cursor)<0)).sort(echoMessageOrder_).reverse().slice(0,40).reverse().map(echoPublicRow_)}}echoFields_(body,['person_id','id','body','track']);if(!echoId_(body.id)||typeof body.body!=='string'||body.body.length>2000||(!body.body.trim()&&!body.track))echoFailure_('INVALID_MESSAGE');const track=body.track?echoTrack_(body.track):null,row=table.rows.find(item=>item.id===body.id);if(row){if(row.sender_id!==uid||row.recipient_id!==person||row.body!==body.body.trim()||JSON.stringify(row.track)!==JSON.stringify(track))echoFailure_('MESSAGE_CONFLICT');return{message:echoPublicRow_(row)}}const message={id:body.id,sender_id:uid,recipient_id:person,body:body.body.trim(),track,created_at:echoTime_()};table.put(message);return{message:echoPublicRow_(message)}}
  if(['social.','danmaku.','rooms.'].some(prefix=>action.startsWith(prefix)))return echoCommunityAction_(body,user,cache);
+ if(action.startsWith('redemption.'))return echoRedemptionAction_(body,user,cache);
  if(action.startsWith('avatar.')||action.startsWith('admin.'))return echoAvatarAction_(body,user,cache);
  echoFailure_('INVALID_REQUEST');
 }
-function echoUpdateName_(body,user,users){if(typeof body.handle!=='string'||!/^[a-z0-9_]{3,24}$/.test(body.handle)||typeof body.display_name!=='string'||!body.display_name.trim()||body.display_name.length>40)echoFailure_('INVALID_PROFILE');if(users.rows.some(row=>row!==user&&row.handle===body.handle))echoFailure_('HANDLE_TAKEN');user.handle=body.handle;user.display_name=body.display_name.trim()}
+function echoUpdateName_(body,user,users){if(typeof body.handle!=='string'||!/^[a-z0-9_]{3,24}$/.test(body.handle)||typeof body.display_name!=='string'||!body.display_name.trim()||body.display_name.length>40)echoFailure_('INVALID_PROFILE');if(users.rows.some(row=>row.user_id!==user.user_id&&row.handle===body.handle))echoFailure_('HANDLE_TAKEN');user.handle=body.handle;user.display_name=body.display_name.trim()}
 function echoPlaylist_(row){const copy=echoPublicRow_(row);copy.playlist_items=(row.items||[]).map((track,position)=>({playlist_id:row.id,track_id:track.id,track,position}));delete copy.items;return copy}
 function echoMessageOrder_(a,b){const stamp=value=>new Date(value).toISOString().slice(0,19)+'.'+(String(value).match(/\.(\d+)/)?.[1]||'').padEnd(6,'0').slice(0,6);return stamp(a.created_at).localeCompare(stamp(b.created_at))||String(a.id).localeCompare(String(b.id))}
-function echoSheetsPost_(body){const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(PropertiesService.getScriptProperties().getProperty('ECHO_DATA_MODE')!=='sheets')echoFailure_('MIGRATION_NOT_ACTIVE');const cache={};return{ok:true,version:'4',...(body.action.startsWith('auth.')?echoAuthAction_(body,cache):echoDataAction_(body,cache))}}catch(error){const allowed=['UNAUTHORIZED','INVALID_REQUEST','INVALID_EMAIL','INVALID_PASSWORD','INVALID_CREDENTIALS','EMAIL_NOT_VERIFIED','RESET_REQUIRED','TOKEN_INVALID','RATE_LIMITED','ACCOUNT_INACTIVE','MIGRATION_NOT_ACTIVE','SCHEMA_NOT_READY','FORBIDDEN','INVALID_PROFILE','HANDLE_TAKEN','FRIENDS_REQUIRED','FRIENDSHIP_EXISTS','INVALID_USER','INVALID_QUERY','INVALID_PLAYLIST','INVALID_MESSAGE','INVALID_CURSOR','MESSAGE_CONFLICT','INVALID_TRACK','INVALID_AVATAR','AVATAR_STORAGE_UNAVAILABLE','VALUE_TOO_LARGE','ADMIN_REQUIRED','USER_NOT_FOUND','CURRENT_PASSWORD_REQUIRED','EMAIL_LIMIT','INVALID_SOCIAL_CONTENT','CONTENT_CONFLICT','SOCIAL_LIMIT','ROOM_UNAVAILABLE','ROOM_STALE'];return{ok:false,error:allowed.includes(error.message)?error.message:'SERVICE_UNAVAILABLE'}}finally{lock.releaseLock()}}
+function echoSheetsPost_(body){const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(PropertiesService.getScriptProperties().getProperty('ECHO_DATA_MODE')!=='sheets')echoFailure_('MIGRATION_NOT_ACTIVE');const cache={};return{ok:true,version:'5',...(body.action.startsWith('auth.')?echoAuthAction_(body,cache):echoDataAction_(body,cache))}}catch(error){const allowed=['UNAUTHORIZED','INVALID_REQUEST','INVALID_EMAIL','INVALID_PASSWORD','INVALID_CREDENTIALS','EMAIL_NOT_VERIFIED','RESET_REQUIRED','TOKEN_INVALID','RATE_LIMITED','ACCOUNT_INACTIVE','MIGRATION_NOT_ACTIVE','SCHEMA_NOT_READY','FORBIDDEN','INVALID_PROFILE','HANDLE_TAKEN','FRIENDS_REQUIRED','FRIENDSHIP_EXISTS','INVALID_USER','INVALID_QUERY','INVALID_PLAYLIST','INVALID_MESSAGE','INVALID_CURSOR','MESSAGE_CONFLICT','INVALID_TRACK','INVALID_AVATAR','AVATAR_STORAGE_UNAVAILABLE','VALUE_TOO_LARGE','ADMIN_REQUIRED','USER_NOT_FOUND','CURRENT_PASSWORD_REQUIRED','EMAIL_LIMIT','INVALID_SOCIAL_CONTENT','CONTENT_CONFLICT','SOCIAL_LIMIT','ROOM_UNAVAILABLE','ROOM_STALE','EMAIL_TAKEN','LAST_ADMIN','USER_CHANGED','INVALID_MEMBERSHIP','INVALID_CODE','INVALID_CODE_SETTINGS','CODE_UNAVAILABLE','MEMBERSHIP_NO_EXPIRY','REDEMPTION_CHANGED'];return{ok:false,error:allowed.includes(error.message)?error.message:'SERVICE_UNAVAILABLE'}}finally{lock.releaseLock()}}
 
 function echoDigest_(text){return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(text),Utilities.Charset.UTF_8)).replace(/=+$/,'')}
 function echoRandom_(){return Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,'')}
@@ -1947,7 +1950,7 @@ function echoAuthAction_(body,cache){
  if(action==='auth.session'){echoFields_(body,[]);const auth=echoTable_('Auth',cache).rows.find(row=>row.user_id===uid);return{user:{id:uid,email:auth.email},profile:echoProfile_(user),account:echoAccount_(user),isAdmin:user.role==='admin'&&user.account_status==='active'}}
  if(action==='auth.signout'){echoFields_(body,[]);echoTable_('Sessions',cache).remove(row=>row.token_hash===echoDigest_(body.session_token));return{}}
  if(action==='auth.password'){echoFields_(body,['password','current_password']);const auth=echoTable_('Auth',cache).rows.find(row=>row.user_id===uid);echoThrottle_('password:'+uid,8,900000);if(!echoPasswordMatches_(body.current_password,auth.password_hash))echoFailure_('CURRENT_PASSWORD_REQUIRED');const hash=echoPasswordHash_(body.password);const now=echoTime_(),current=echoTable_('Sessions',cache).rows.find(row=>row.token_hash===echoDigest_(body.session_token));current.created_at=now;echoTable_('Sessions',cache).put(current);auth.password_hash=hash;auth.password_changed_at=now;echoTable_('Auth',cache).put(auth);echoTable_('Sessions',cache).remove(row=>row.user_id===uid&&row.token_hash!==echoDigest_(body.session_token));return{}}
- if(action==='auth.delete'){echoFields_(body,[]);if(user.role==='admin'&&echoTable_('Users',cache).rows.filter(row=>row.role==='admin').length===1)echoFailure_('FORBIDDEN');echoAvatarCall_({action:'purge',user_id:uid});echoCommunityDeleteUser_(cache,uid);for(const name of ['Sessions','Recovery','Auth','Likes','Playlists'])echoTable_(name,cache).remove(row=>row.user_id===uid);echoTable_('Friendships',cache).remove(row=>row.requester_id===uid||row.addressee_id===uid);echoTable_('Messages',cache).remove(row=>row.sender_id===uid||row.recipient_id===uid);echoTable_('Users',cache).remove(row=>row.user_id===uid);return{deleted:true}}
+ if(action==='auth.delete'){echoFields_(body,[]);if(user.role==='admin'&&!echoTable_('Users',cache).rows.some(row=>row.user_id!==uid&&row.role==='admin'&&row.account_status==='active'))echoFailure_('FORBIDDEN');echoAvatarCall_({action:'purge',user_id:uid});echoCommunityDeleteUser_(cache,uid);echoRedemptionDeleteUser_(cache,uid);for(const name of ['Sessions','Recovery','Auth','Likes','Playlists'])echoTable_(name,cache).remove(row=>row.user_id===uid);echoTable_('Friendships',cache).remove(row=>row.requester_id===uid||row.addressee_id===uid);echoTable_('Messages',cache).remove(row=>row.sender_id===uid||row.recipient_id===uid);echoTable_('Users',cache).remove(row=>row.user_id===uid);return{deleted:true}}
  echoFailure_('INVALID_REQUEST');
 }
 function echoDummyHash_(){const p=PropertiesService.getScriptProperties(),hash=echoPasswordHash_(echoRandom_());p.setProperty('ECHO_DUMMY_HASH',hash);return hash}
@@ -1961,14 +1964,7 @@ function echoAvatarAction_(body,user,cache){
  if(action==='avatar.sign'){echoFields_(body,['paths']);if(!Array.isArray(body.paths)||body.paths.length>50||body.paths.some(path=>!echoAvatarPath_(path)||!users.rows.some(row=>row.avatar_path===path)))echoFailure_('INVALID_AVATAR');return echoAvatarCall_({action:'sign',paths:[...new Set(body.paths)]})}
  if(action==='avatar.upload'){echoFields_(body,['image']);if(typeof body.image!=='string'||body.image.length>1400000||!/^[A-Za-z0-9+/]+={0,2}$/.test(body.image))echoFailure_('INVALID_AVATAR');const path=uid+'/'+Utilities.getUuid()+'.jpg';echoAvatarCall_({action:'upload',path,image:body.image});const old=user.avatar_path;user.avatar_path=path;user.synced_at=echoTime_();users.put(user);if(old)try{echoAvatarCall_({action:'remove',path:old})}catch{}return{profile:echoProfile_(user)}}
  if(action==='avatar.remove'){echoFields_(body,[]);const old=user.avatar_path;user.avatar_path='';user.synced_at=echoTime_();users.put(user);if(old)try{echoAvatarCall_({action:'remove',path:old})}catch{}return{profile:echoProfile_(user)}}
- if(user.role!=='admin')echoFailure_('ADMIN_REQUIRED');
- if(action==='admin.list'){echoFields_(body,['offset']);const offset=body.offset??0;if(!Number.isInteger(offset)||offset<0||offset>100000)echoFailure_('INVALID_REQUEST');const list=users.rows.slice().sort((a,b)=>a.user_id.localeCompare(b.user_id)).slice(offset,offset+30);return{users:list.map(echoProfile_),offset,hasMore:offset+list.length<users.rows.length}}
- if(action==='admin.update'){
-  echoFields_(body,['id','handle','display_name','avatar']);const target=users.rows.find(row=>row.user_id===body.id);if(!target)echoFailure_('USER_NOT_FOUND');echoUpdateName_(body,target,users);const avatar=body.avatar||{mode:'keep'};if(!avatar||Object.keys(avatar).some(key=>!['mode','path'].includes(key))||!['keep','copy','remove'].includes(avatar.mode))echoFailure_('INVALID_AVATAR');let path=target.avatar_path;
-  if(avatar.mode==='copy'){if(!echoAvatarPath_(avatar.path)||!users.rows.some(row=>row.avatar_path===avatar.path))echoFailure_('INVALID_AVATAR');path=target.user_id+'/'+Utilities.getUuid()+'.jpg';echoAvatarCall_({action:'copy',source:avatar.path,path})}else if(avatar.mode==='remove')path='';
-  const old=target.avatar_path;target.avatar_path=path;target.synced_at=echoTime_();users.put(target);if(old&&old!==path)try{echoAvatarCall_({action:'remove',path:old})}catch{}return{profile:echoProfile_(target)};
- }
- echoFailure_('INVALID_REQUEST');
+ return echoMemberAdminAction_(body,user,cache);
 }
 
 function echoSocialAudience_(cache, user) {
@@ -2135,3 +2131,105 @@ function echoCommunityDeleteUser_(cache,uid) {
  echoTable_('RoomMessages',cache).remove(row=>row.user_id===uid||owned.includes(row.room_id));rooms.remove(row=>owned.includes(row.id));
  for(const room of rooms.rows)if((room.members||[]).includes(uid)){room.members=room.members.filter(id=>id!==uid);rooms.put(room)}
 }
+
+function echoMemberVersion_(row,auth){return echoDigest_(JSON.stringify([row.user_id,row.email,row.handle,row.display_name,row.avatar_path,row.account_status,row.tier,row.premium_until,row.role,auth?.email,auth?.email_verified]))}
+function echoMember_(row,cache){const auth=echoTable_('Auth',cache).rows.find(item=>item.user_id===row.user_id);return {...echoProfile_(row),email:row.email,account_status:row.account_status,tier:row.tier,premium_until:row.premium_until||null,role:row.role,email_verified:auth?.email_verified===true,synced_at:row.synced_at,version:echoMemberVersion_(row,auth)}}
+function echoAdminPut_(row){const values=ECHO_TABLES.Users.map(key=>echoText_(row[key]));echoBook_().getSheetByName('Users').getRange(row._row,1,1,values.length).setValues([values])}
+function echoMemberAdminAction_(body,actor,cache){
+ if(actor.role!=='admin'||actor.account_status!=='active')echoFailure_('ADMIN_REQUIRED');
+ const users=echoTable_('Users',cache),action=body.action;
+ if(action==='admin.list'){
+  echoFields_(body,['offset']);const offset=body.offset??0;if(!Number.isInteger(offset)||offset<0||offset>100000)echoFailure_('INVALID_REQUEST');
+  const list=users.rows.slice().sort((a,b)=>a.user_id.localeCompare(b.user_id)).slice(offset,offset+30);
+  return {users:list.map(row=>echoMember_(row,cache)),offset,hasMore:offset+list.length<users.rows.length,capabilities:['member_admin','redemption_admin']};
+ }
+ if(action.startsWith('admin.codes.'))return echoRedemptionAdmin_(body,actor,cache);
+ const target=users.rows.find(row=>row.user_id===body.id);if(!target)echoFailure_('USER_NOT_FOUND');
+ const auth=echoTable_('Auth',cache).rows.find(row=>row.user_id===target.user_id);if(!auth)echoFailure_('USER_NOT_FOUND');
+ if(action==='admin.reset-password'){
+  echoFields_(body,['id']);echoThrottle_('global-mail',80,86400000);echoThrottle_('admin-reset:'+actor.user_id,8,3600000);echoSendRecovery_(auth,'reset',null,cache);return {sent:true};
+ }
+ if(action!=='admin.update')echoFailure_('INVALID_REQUEST');
+ echoFields_(body,['id','handle','display_name','avatar','email','account_status','tier','premium_until','role','version']);
+ const extended=['email','account_status','tier','premium_until','role'].some(key=>Object.prototype.hasOwnProperty.call(body,key));
+ if(extended&&!body.version)echoFailure_('INVALID_REQUEST');
+ if(body.version&&body.version!==echoMemberVersion_(target,auth))echoFailure_('USER_CHANGED');
+ const candidate={...target};echoUpdateName_(body,candidate,users);
+ if(Object.prototype.hasOwnProperty.call(body,'email')){candidate.email=echoEmail_(body.email);if(users.rows.some(row=>row.user_id!==candidate.user_id&&String(row.email).toLowerCase()===candidate.email)||echoTable_('Auth',cache).rows.some(row=>row.user_id!==candidate.user_id&&String(row.email).toLowerCase()===candidate.email))echoFailure_('EMAIL_TAKEN')}
+ if(Object.prototype.hasOwnProperty.call(body,'account_status'))candidate.account_status=body.account_status;
+ if(Object.prototype.hasOwnProperty.call(body,'tier'))candidate.tier=body.tier;
+ if(Object.prototype.hasOwnProperty.call(body,'role'))candidate.role=body.role;
+ if(Object.prototype.hasOwnProperty.call(body,'premium_until')){if(body.premium_until!==null&&(typeof body.premium_until!=='string'||body.premium_until.length>40||!Number.isFinite(Date.parse(body.premium_until))))echoFailure_('INVALID_MEMBERSHIP');candidate.premium_until=body.premium_until?new Date(body.premium_until).toISOString():''}
+ if(!['active','suspended','disabled'].includes(candidate.account_status)||!['free','premium'].includes(candidate.tier)||!['member','admin'].includes(candidate.role))echoFailure_('INVALID_MEMBERSHIP');
+ if(!users.rows.some(row=>{const value=row.user_id===candidate.user_id?candidate:row;return value.role==='admin'&&value.account_status==='active'}))echoFailure_('LAST_ADMIN');
+ const avatar=body.avatar||{mode:'keep'},allowed={keep:['mode'],remove:['mode'],copy:['mode','path'],upload:['mode','image']}[avatar?.mode];
+ if(!allowed||Object.keys(avatar).some(key=>!allowed.includes(key)))echoFailure_('INVALID_AVATAR');
+ if(avatar.mode==='copy'&&(!echoAvatarPath_(avatar.path)||!users.rows.some(row=>row.avatar_path===avatar.path)))echoFailure_('INVALID_AVATAR');
+ if(avatar.mode==='upload'&&(typeof avatar.image!=='string'||avatar.image.length>1400000||!/^[A-Za-z0-9+/]+={0,2}$/.test(avatar.image)))echoFailure_('INVALID_AVATAR');
+ let freshPath=null,committed=false;
+ try{
+  if(avatar.mode==='copy'||avatar.mode==='upload'){freshPath=candidate.user_id+'/'+Utilities.getUuid()+'.jpg';echoAvatarCall_(avatar.mode==='copy'?{action:'copy',source:avatar.path,path:freshPath}:{action:'upload',image:avatar.image,path:freshPath});candidate.avatar_path=freshPath}else if(avatar.mode==='remove')candidate.avatar_path='';
+  const currentCache={},currentUsers=echoTable_('Users',currentCache),current=currentUsers.rows.find(row=>row.user_id===target.user_id),currentAuth=echoTable_('Auth',currentCache).rows.find(row=>row.user_id===target.user_id),currentActor=currentUsers.rows.find(row=>row.user_id===actor.user_id);
+  if(currentActor?.role!=='admin'||currentActor?.account_status!=='active')echoFailure_('ADMIN_REQUIRED');
+  if(!current||!currentAuth||echoMemberVersion_(current,currentAuth)!==echoMemberVersion_(target,auth))echoFailure_('USER_CHANGED');
+  if(!currentUsers.rows.some(row=>{const value=row.user_id===candidate.user_id?candidate:row;return value.role==='admin'&&value.account_status==='active'}))echoFailure_('LAST_ADMIN');
+  const emailChanged=String(currentAuth.email).toLowerCase()!==String(candidate.email).toLowerCase();
+  const previousAuth={...currentAuth};
+  if(emailChanged){currentAuth.email=candidate.email;currentAuth.email_verified=false;currentAuth.failed_attempts=0;currentAuth.locked_until='';echoTable_('Auth',currentCache).put(currentAuth)}
+  candidate._row=current._row;candidate.created_at=current.created_at;candidate.synced_at=echoTime_();
+  try{echoAdminPut_(candidate);committed=true}catch(error){if(emailChanged)echoTable_('Auth',currentCache).put(previousAuth);throw error}
+  if(emailChanged||candidate.account_status!=='active'){echoTable_('Sessions',currentCache).remove(row=>row.user_id===candidate.user_id);if(emailChanged)echoTable_('Recovery',currentCache).remove(row=>row.user_id===candidate.user_id)}
+  const old=current.avatar_path;if(old&&old!==candidate.avatar_path)try{echoAvatarCall_({action:'remove',path:old})}catch{}
+  return {profile:echoMember_(candidate,currentCache),emailChanged,sessionRevoked:emailChanged||candidate.account_status!=='active'};
+ }catch(error){if(freshPath&&!committed)try{echoAvatarCall_({action:'remove',path:freshPath})}catch{}throw error}
+}
+
+function echoCode_(value){if(typeof value!=='string'||value.length>80)echoFailure_('INVALID_CODE');const code=value.trim().toUpperCase().replace(/[\s-]/g,'');if(!/^ECHO[0-9A-F]{32}$/.test(code))echoFailure_('INVALID_CODE');return code}
+function echoCodePublic_(row,cache){const count=echoTable_('Redemptions',cache).rows.filter(item=>item.code_id===row.id&&item.state!=='cancelled').length;return {id:row.id,code_hint:row.code_hint,label:row.label,days:row.days,max_uses:row.max_uses,uses:count,expires_at:row.expires_at||null,enabled:row.enabled===true,created_at:row.created_at}}
+function echoRedemptionAdmin_(body,actor,cache){
+ if(actor.role!=='admin'||actor.account_status!=='active')echoFailure_('ADMIN_REQUIRED');
+ const table=echoTable_('RedemptionCodes',cache);
+ if(body.action==='admin.codes.list'){
+  echoFields_(body,['cursor']);const page=echoSocialPage_(table.rows,body.cursor,30);return {codes:page.items.map(row=>echoCodePublic_(row,cache)),hasMore:page.hasMore};
+ }
+ if(body.action==='admin.codes.set'){
+  echoFields_(body,['id','enabled']);const row=table.rows.find(item=>item.id===body.id);if(!row||typeof body.enabled!=='boolean')echoFailure_('INVALID_REQUEST');row.enabled=body.enabled;table.put(row);return {code:echoCodePublic_(row,cache)};
+ }
+ if(body.action!=='admin.codes.create')echoFailure_('INVALID_REQUEST');
+ echoFields_(body,['codes','label','days','max_uses','expires_at']);
+ if(!Array.isArray(body.codes)||body.codes.length<1||body.codes.length>20||typeof body.label!=='string'||body.label.length>60||!Number.isInteger(body.days)||body.days<1||body.days>3650||!Number.isInteger(body.max_uses)||body.max_uses<1||body.max_uses>10000)echoFailure_('INVALID_CODE_SETTINGS');
+ if(body.expires_at!==null&&(typeof body.expires_at!=='string'||body.expires_at.length>40||!Number.isFinite(Date.parse(body.expires_at))))echoFailure_('INVALID_CODE_SETTINGS');
+ const expires=body.expires_at?new Date(body.expires_at).toISOString():'';if(expires&&Date.parse(expires)<=Date.now())echoFailure_('INVALID_CODE_SETTINGS');
+ const prepared=body.codes.map(item=>{if(!item||Object.keys(item).some(key=>!['id','code'].includes(key))||!echoId_(item.id))echoFailure_('INVALID_REQUEST');const code=echoCode_(item.code);return {id:item.id,code,hash:echoDigest_(code)}});
+ if(new Set(prepared.map(row=>row.id)).size!==prepared.length||new Set(prepared.map(row=>row.hash)).size!==prepared.length)echoFailure_('INVALID_REQUEST');
+ for(const item of prepared){const existing=table.rows.find(row=>row.id===item.id||row.code_hash===item.hash);if(existing&&(existing.id!==item.id||existing.code_hash!==item.hash||existing.created_by!==actor.user_id||existing.days!==body.days||existing.max_uses!==body.max_uses||existing.expires_at!==expires||existing.label!==body.label.trim()))echoFailure_('CONTENT_CONFLICT')}
+ echoThrottle_('code-create:'+actor.user_id,20,3600000);
+ const result=[];
+ for(const item of prepared){let row=table.rows.find(value=>value.id===item.id);if(!row)row=table.put({id:item.id,code_hash:item.hash,code_hint:item.code.slice(-6),label:body.label.trim(),days:body.days,max_uses:body.max_uses,expires_at:expires,enabled:true,created_by:actor.user_id,created_at:echoTime_()});result.push({...echoCodePublic_(row,cache),code:'ECHO-'+item.code.slice(4).match(/.{8}/g).join('-')})}
+ return {codes:result};
+}
+function echoApplyRedemption_(receipt,user,cache){
+ const sheet=echoBook_().getSheetByName('Users'),controls=sheet.getRange(user._row,6,1,3).getValues()[0],tier=String(controls[1]),until=controls[2] instanceof Date?controls[2].toISOString():String(controls[2]||'');
+ const alreadyApplied=tier==='premium'&&Number.isFinite(Date.parse(until))&&Date.parse(until)>=Date.parse(receipt.premium_until),unchanged=tier===receipt.previous_tier&&until===receipt.previous_until;
+ if(controls[0]!=='active'||(!alreadyApplied&&!unchanged)){receipt.state='cancelled';echoTable_('Redemptions',cache).put(receipt);echoFailure_('REDEMPTION_CHANGED')}
+ if(!alreadyApplied)sheet.getRange(user._row,7,1,2).setValues([['premium',receipt.premium_until]]);
+ user.tier='premium';user.premium_until=alreadyApplied?until:receipt.premium_until;receipt.state='applied';receipt.applied_at=echoTime_();echoTable_('Redemptions',cache).put(receipt);
+}
+function echoRedemptionAction_(body,user,cache){
+ const uid=user.user_id,receipts=echoTable_('Redemptions',cache);
+ if(body.action==='redemption.history'){
+  echoFields_(body,[]);for(const receipt of receipts.rows.filter(row=>row.user_id===uid&&row.state==='pending')){try{echoApplyRedemption_(receipt,user,cache)}catch(error){if(error.message!=='REDEMPTION_CHANGED')throw error}}return {redemptions:receipts.rows.filter(row=>row.user_id===uid&&row.state==='applied').sort(echoMessageOrder_).reverse().slice(0,30).map(row=>({id:row.id,days:row.days,created_at:row.created_at,premium_until:row.premium_until})),account:echoAccount_(user)};
+ }
+ if(body.action!=='redemption.redeem')echoFailure_('INVALID_REQUEST');
+ echoFields_(body,['code']);echoThrottle_('redeem:'+uid,10,600000);
+ const hash=echoDigest_(echoCode_(body.code)),code=echoTable_('RedemptionCodes',cache).rows.find(row=>row.code_hash===hash);if(!code)echoFailure_('CODE_UNAVAILABLE');
+ const existing=receipts.rows.find(row=>row.user_id===uid&&row.code_id===code.id);
+ if(existing){if(existing.state==='cancelled')echoFailure_('REDEMPTION_CHANGED');if(existing.state==='pending')echoApplyRedemption_(existing,user,cache);return {account:echoAccount_(user),alreadyRedeemed:true,redemption:{id:existing.id,days:existing.days,premium_until:existing.premium_until}}}
+ if(code.enabled!==true||code.expires_at&&Date.parse(code.expires_at)<=Date.now()||receipts.rows.filter(row=>row.code_id===code.id&&row.state!=='cancelled').length>=code.max_uses)echoFailure_('CODE_UNAVAILABLE');
+ if(!Number.isInteger(code.days)||code.days<1||code.days>3650||!Number.isInteger(code.max_uses)||code.max_uses<1||code.max_uses>10000||code.expires_at&&!Number.isFinite(Date.parse(code.expires_at)))echoFailure_('CODE_UNAVAILABLE');
+ if(user.tier==='premium'&&!user.premium_until)echoFailure_('MEMBERSHIP_NO_EXPIRY');
+ const oldUntil=user.premium_until||'',start=user.tier==='premium'?Math.max(Date.now(),Date.parse(oldUntil)||0):Date.now(),expiry=new Date(start+code.days*86400000).toISOString();
+ const receipt=receipts.put({id:Utilities.getUuid(),code_id:code.id,user_id:uid,days:code.days,previous_tier:user.tier,previous_until:oldUntil,premium_until:expiry,state:'pending',created_at:echoTime_(),applied_at:''});
+ echoApplyRedemption_(receipt,user,cache);return {account:echoAccount_(user),alreadyRedeemed:false,redemption:{id:receipt.id,days:receipt.days,premium_until:receipt.premium_until}};
+}
+function echoRedemptionDeleteUser_(cache,uid){const receipts=echoTable_('Redemptions',cache);for(const row of receipts.rows.filter(item=>item.user_id===uid)){row.user_id='';row.previous_until='';row.previous_tier='';if(row.state==='pending')row.state='cancelled';receipts.put(row)}const codes=echoTable_('RedemptionCodes',cache);for(const row of codes.rows.filter(item=>item.created_by===uid)){row.created_by='';codes.put(row)}}
