@@ -11,5 +11,10 @@ if(supabaseAnonKey&&!supabaseAnonKey.startsWith('sb_publishable_')){
  try{claims=JSON.parse(Buffer.from(supabaseAnonKey.split('.')[1]||'','base64url'))}catch{throw new Error('Use a Supabase publishable or legacy anon key.');}
  if(claims.role!=='anon')throw new Error('Only a publishable or anon key may be put in the browser.');
 }
-await writeFile(new URL('../dist/config.js',import.meta.url),"'use strict';\nwindow.ECHO_CONFIG=Object.freeze("+JSON.stringify({supabaseUrl,supabaseAnonKey})+");\n");
+const accountBackend=process.env.ECHO_ACCOUNT_BACKEND||existing.accountBackend||'supabase';
+if(!['supabase','sheets'].includes(accountBackend))throw Error('Unknown account backend.');
+const appsScriptUrl=(process.env.ECHO_APPS_SCRIPT_URL||existing.appsScriptUrl||'').trim();
+if(appsScriptUrl&&!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(appsScriptUrl))throw Error('Use the Apps Script /exec deployment URL.');
+if(accountBackend==='sheets'&&!appsScriptUrl)throw Error('The Sheets backend requires its Apps Script URL.');
+await writeFile(new URL('../dist/config.js',import.meta.url),"'use strict';\nwindow.ECHO_CONFIG=Object.freeze("+JSON.stringify({supabaseUrl,supabaseAnonKey,accountBackend,appsScriptUrl})+");\n");
 console.log('Public browser configuration written. Accounts: '+Boolean(supabaseUrl)+'. Music library: YouTube Music; native audio and local files are retained.');

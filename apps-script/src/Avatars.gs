@@ -1,0 +1,16 @@
+function echoAvatarPath_(value){return typeof value==='string'&&/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/i.test(value)}
+function echoAvatarCall_(body){const p=PropertiesService.getScriptProperties(),key=p.getProperty('ECHO_ADMIN_HOOK_KEY'),config=echoConfig_();if(!key||key.length<32)echoFailure_('AVATAR_STORAGE_UNAVAILABLE');const response=UrlFetchApp.fetch(config.url+'/functions/v1/avatar-storage',{method:'post',contentType:'application/json',headers:{apikey:config.key,'x-echo-admin-key':key},payload:JSON.stringify(body),muteHttpExceptions:true});let data;try{data=JSON.parse(response.getContentText())}catch{}if(response.getResponseCode()!==200||!data?.ok)echoFailure_('AVATAR_STORAGE_UNAVAILABLE');return data}
+function echoAvatarAction_(body,user,cache){
+ const users=echoTable_('Users',cache),uid=user.user_id,action=body.action;
+ if(action==='avatar.sign'){echoFields_(body,['paths']);if(!Array.isArray(body.paths)||body.paths.length>50||body.paths.some(path=>!echoAvatarPath_(path)||!users.rows.some(row=>row.avatar_path===path)))echoFailure_('INVALID_AVATAR');return echoAvatarCall_({action:'sign',paths:[...new Set(body.paths)]})}
+ if(action==='avatar.upload'){echoFields_(body,['image']);if(typeof body.image!=='string'||body.image.length>1400000||!/^[A-Za-z0-9+/]+={0,2}$/.test(body.image))echoFailure_('INVALID_AVATAR');const path=uid+'/'+Utilities.getUuid()+'.jpg';echoAvatarCall_({action:'upload',path,image:body.image});const old=user.avatar_path;user.avatar_path=path;user.synced_at=echoTime_();users.put(user);if(old)try{echoAvatarCall_({action:'remove',path:old})}catch{}return{profile:echoProfile_(user)}}
+ if(action==='avatar.remove'){echoFields_(body,[]);const old=user.avatar_path;user.avatar_path='';user.synced_at=echoTime_();users.put(user);if(old)try{echoAvatarCall_({action:'remove',path:old})}catch{}return{profile:echoProfile_(user)}}
+ if(user.role!=='admin')echoFailure_('ADMIN_REQUIRED');
+ if(action==='admin.list'){echoFields_(body,['offset']);const offset=body.offset??0;if(!Number.isInteger(offset)||offset<0||offset>100000)echoFailure_('INVALID_REQUEST');const list=users.rows.slice().sort((a,b)=>a.user_id.localeCompare(b.user_id)).slice(offset,offset+30);return{users:list.map(echoProfile_),offset,hasMore:offset+list.length<users.rows.length}}
+ if(action==='admin.update'){
+  echoFields_(body,['id','handle','display_name','avatar']);const target=users.rows.find(row=>row.user_id===body.id);if(!target)echoFailure_('USER_NOT_FOUND');echoUpdateName_(body,target,users);const avatar=body.avatar||{mode:'keep'};if(!avatar||Object.keys(avatar).some(key=>!['mode','path'].includes(key))||!['keep','copy','remove'].includes(avatar.mode))echoFailure_('INVALID_AVATAR');let path=target.avatar_path;
+  if(avatar.mode==='copy'){if(!echoAvatarPath_(avatar.path)||!users.rows.some(row=>row.avatar_path===avatar.path))echoFailure_('INVALID_AVATAR');path=target.user_id+'/'+Utilities.getUuid()+'.jpg';echoAvatarCall_({action:'copy',source:avatar.path,path})}else if(avatar.mode==='remove')path='';
+  const old=target.avatar_path;target.avatar_path=path;target.synced_at=echoTime_();users.put(target);if(old&&old!==path)try{echoAvatarCall_({action:'remove',path:old})}catch{}return{profile:echoProfile_(target)};
+ }
+ echoFailure_('INVALID_REQUEST');
+}

@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {createAvatarHandler} from '../supabase/functions/avatar-storage/storage.mjs';
+const path='11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.jpg',source='33333333-3333-4333-8333-333333333333/44444444-4444-4444-8444-444444444444.jpg',key='a-long-private-server-hook-secret-value';const calls=[];
+const handler=createAvatarHandler({url:'https://api.test',serviceKey:'private-storage-key',hookKey:key},async(url,options)=>{calls.push({url,...options});if(url.includes('/object/sign/'))return Response.json([{path,signedURL:'/object/sign/echo-avatars/'+path+'?token=sample'}]);if(url.includes('/object/list/'))return Response.json([{name:path.split('/')[1]}]);return Response.json({})});
+const request=(body,secret=key)=>handler(new Request('https://api.test/functions/v1/avatar-storage',{method:'POST',headers:{'x-echo-admin-key':secret},body:JSON.stringify(body)}));
+assert.equal((await request({action:'sign',paths:[path]},'bad-key')).status,401);assert.equal(calls.length,0);
+for(const body of [{action:'sign',paths:['../escape']},{action:'copy',source,path:'../escape'},{action:'remove',path,role:'admin'},{action:'purge',user_id:'../'},{action:'upload',path,image:btoa('<svg></svg>')}])assert.equal((await request(body)).status,400);
+console.log('PASS avatar storage requires the private server key and rejects traversal, extra fields, and non-JPEG uploads');
+assert.equal((await request({action:'upload',path,image:btoa(String.fromCharCode(255,216,255,1,2,3,255,217))})).status,200);const upload=calls.at(-1);assert.equal(upload.headers['Content-Type'],'image/jpeg');assert.equal(upload.headers['x-upsert'],'false');assert(upload.body instanceof Uint8Array);
+const signed=await(await request({action:'sign',paths:[path]})).json();assert.equal(signed.urls[0].signedUrl,'https://api.test/storage/v1/object/sign/echo-avatars/'+path+'?token=sample');assert(!JSON.stringify(signed).includes('private-storage-key'));assert.equal((await request({action:'copy',source,path})).status,200);assert.equal(JSON.parse(calls.at(-1).body).sourceKey,source);
+assert.equal((await request({action:'purge',user_id:path.split('/')[0]})).status,200);assert.deepEqual(JSON.parse(calls.at(-1).body).prefixes,[path]);
+console.log('PASS JPEG uploads, signed photo URLs, copies and account purge stay inside the private avatar bucket without exposing storage credentials');

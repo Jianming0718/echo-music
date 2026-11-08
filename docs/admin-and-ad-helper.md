@@ -14,7 +14,7 @@ Memberships can be created or removed only by the operator through a trusted ser
 
 No email addresses, passwords, chats, likes or playlists are included in the user-management response. Account status, premium tier and membership expiry continue to use the existing private Google Sheet/Apps Script bridge. Editing those values in the database alone can be overwritten on the next bridge synchronization.
 
-At deployment, operator membership still requires confirmation of the exact account. The feature is prepared but will not appear until that server-side grant is explicitly approved and applied. No privileged credential is included in the frontend or source archive.
+As of 0.9.0, the operator explicitly confirmed the account and its administrator membership is enabled. The same administrator role is recorded in the private Users sheet. No privileged credential is included in the frontend or source archive.
 
 Existing Supabase advisory: leaked password protection is disabled. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
 

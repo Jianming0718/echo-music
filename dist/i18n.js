@@ -1,6 +1,26 @@
 'use strict';
 (() => {
- const rows=`管理员\tAdministrator
+ const rows=`邮箱已确认，请登录。\tEmail verified. Please sign in.
+登录已过期，请重新登录。\tYour session expired. Please sign in again.
+请输入有效邮箱。\tEnter a valid email address.
+新密码需为 12–256 个字符。\tUse 12–256 characters for the new password.
+邮箱或密码不正确。旧账号迁移后请先重设密码。\tIncorrect email or password. Existing accounts must reset their password after migration.
+邮件链接已失效或已使用，请重新申请。\tThis email link expired or was used. Request a new one.
+操作次数较多，请稍后重试。\tToo many attempts. Please try again later.
+邮件发送暂不可用，请稍后重试。\tEmail delivery is temporarily unavailable. Please try again later.
+账号当前不可用。\tThis account is currently unavailable.
+新账号服务尚未启用，请稍后重试。\tThe new account service is not active yet. Please try again later.
+没有权限执行此操作。\tYou do not have permission for this action.
+当前密码不正确。\tThe current password is incorrect.
+头像服务暂不可用，请重试。\tThe photo service is unavailable. Please retry.
+内容太长，请减少后重试。\tThe content is too long. Shorten it and retry.
+歌单资料无效或超过容量限制。\tThe playlist is invalid or exceeds its size limit.
+消息编号已被使用，请重新发送。\tThis message ID is already used. Please send again.
+连接超时，请重试。\tConnection timed out. Please retry.
+当前登录仍由 Supabase Auth 管理。私有 Google Sheet 已保存迁移副本；待 Apps Script 正式切换后，账号使用新的密码哈希和登录会话，旧账号需通过邮件重设密码。密码明文不会写入表格，会话和重设令牌只保存哈希。\tSupabase Auth still handles current sign-ins. A private Google Sheet holds migration copies. After the Apps Script cutover, accounts use new password hashes and sessions; existing users reset their password by email. Plaintext passwords are never written to the workbook. Only hashes of session and recovery tokens are stored.
+收藏、歌单、好友关系、聊天文字和歌曲资料目前保存在 Supabase，并有运营者私有 Google Sheet 迁移副本。正式切换后将由 Sheets 保存并通过已认证的 Apps Script 接口访问。好友只能读取明确共享的歌单和双方聊天；移除好友撤销访问。聊天没有端到端加密，运营者可访问私有管理表。草稿只在页面内存中保存，歌曲卡片不复制音频，本机文件不能直接发送给好友。\tSupabase currently stores favorites, playlists, friendships, messages and song metadata, with migration copies in the operator’s private Google Sheet. After cutover, Sheets stores these records behind authenticated Apps Script endpoints. Friends can read only explicitly shared playlists and their mutual chats. Removing a friend revokes access. Chats are not end-to-end encrypted; the operator can access the private workbook. Drafts stay in page memory, song cards do not copy audio, and local files cannot be sent directly.
+账号通知邮件可由运营者通过 Apps Script 手动发送。迁移前认证邮件由 Supabase 处理，切换后由 Apps Script 发送邮箱验证与密码重设邮件。\tThe operator can manually send account notices through Apps Script. Supabase sends authentication emails before migration; Apps Script sends verification and password-reset emails after cutover.
+管理员\tAdministrator
 用户管理\tManage users
 编辑用户\tEdit user
 编辑\tEdit
@@ -445,7 +465,7 @@ Echo 首页\tEcho home
 选择的照片会在浏览器中裁切并重新编码为 JPEG，上传到私有头像存储。账号持有人和能查看其资料的已登录听友可取得临时访问链接。更换或删除头像会移除旧照片；账号删除会先清理该账号的头像文件。\tPhotos are cropped and re-encoded as JPEG in your browser, then uploaded to private storage. The account owner and signed-in listeners who can view the profile can obtain temporary image links. Replacing or removing a photo removes the old image. Account deletion first cleans up owned photos.
 运营者的私有 Google Sheet 保存用户 ID、邮箱、昵称、用户名、头像路径、账号状态、会员等级与时间。表格不对普通用户开放。连接后，Apps Script 会验证用户身份，再同步该用户的资料；管理员密钥只保存在服务器与脚本属性中。会员和账号状态由后端验证。\tThe operator's private Google Sheet stores user IDs, emails, display names, usernames, photo paths, account status, membership tiers, and timestamps. It is not accessible to ordinary users. Apps Script verifies the signed-in user before synchronizing that user's details. Administrator keys stay on the server and in script properties. The backend validates membership and account status.
 收藏、歌单、好友关系、聊天文字和歌曲资料保存在 Supabase。好友只能读取明确共享的歌单。聊天只允许已确认好友收发；移除好友撤销访问，历史记录保留至任一参与者删除账号。聊天没有端到端加密，未发送的草稿只在页面内存中保存。歌曲卡片不复制音频，本机文件不能直接发送给好友。\tSupabase stores favorites, playlists, friendships, messages, and song metadata. Friends can read only explicitly shared playlists. Chat is available to confirmed friends. Removing a friend revokes access; history remains until either participant deletes their account. Chat is not end-to-end encrypted. Unsent drafts stay in page memory. Song cards do not copy audio, and local files cannot be sent directly.
-音乐库搜索和播放使用 YouTube Music／YouTube，可播放音频也可来自 Audius，歌词查询使用 LRCLIB。相应服务会接收加载请求、关键词、IP 与浏览器资料。YouTube 播放器保留在页面内用于播放，视频画面不在界面中显示；加载时 YouTube 会接收相关请求。歌曲资料可能使用外部封面。账号通知邮件可由运营者通过 Apps Script 手动发送，认证邮件继续由 Supabase 处理。\tMusic search and playback use YouTube Music and YouTube. Audio can also come from Audius; lyrics use LRCLIB. These services receive loading requests, search terms, IP addresses, and browser details. The YouTube player remains in the page for playback, with its video surface outside the visible interface. YouTube receives player requests. Song metadata may use external artwork. The operator can manually send account notices through Apps Script. Supabase handles authentication emails.
+音乐库搜索和播放使用 YouTube Music／YouTube，可播放音频也可来自 Audius，歌词查询使用 LRCLIB。相应服务会接收加载请求、关键词、IP 与浏览器资料。YouTube 播放器保留在页面内用于播放，视频画面不在界面中显示；加载时 YouTube 会接收相关请求。歌曲资料可能使用外部封面。账号通知邮件可由运营者通过 Apps Script 手动发送。迁移前认证邮件由 Supabase 处理，切换后由 Apps Script 发送邮箱验证与密码重设邮件。\tMusic search and playback use YouTube Music and YouTube. Audio can also come from Audius; lyrics use LRCLIB. These services receive loading requests, search terms, IP addresses, and browser details. The YouTube player remains in the page for playback, with its video surface outside the visible interface. YouTube receives player requests. Song metadata may use external artwork. The operator can manually send account notices through Apps Script. Supabase sends authentication emails before migration; Apps Script sends verification and password-reset emails after cutover.
 可以取消收藏、删除歌单、移除好友、移除头像及删除账号。账号删除会移除云端账号资料，本机音频需在资料库中移除或清除浏览器资料。退出登录恢复访客资料，不显示上一账号的私人收藏和歌单。\tYou can remove favorites, playlists, friends, photos, and your account. Account deletion removes cloud account data. Remove local audio in Library or clear browser data. Signing out restores guest data and does not show the previous account's private favorites or playlists.
 网站由 GitHub Pages 或当前 Sites 部署托管。托管及数据服务可能保留标准运行日志。公开源码不包含用户表格内容、密码、私密管理员密钥或用户照片。\tThe website is hosted on GitHub Pages or the current Sites deployment. Hosting and data services may retain standard operational logs. Public source code excludes user spreadsheet contents, passwords, private administrator keys, and user photos.`;
  const pairs=rows.split('\n').map(row=>row.split('\t')),zh=new Map(),en=new Map();
