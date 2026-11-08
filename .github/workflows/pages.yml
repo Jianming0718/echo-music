@@ -26,7 +26,6 @@ jobs:
         env:
           ECHO_SUPABASE_URL: ${{ vars.ECHO_SUPABASE_URL }}
           ECHO_SUPABASE_ANON_KEY: ${{ vars.ECHO_SUPABASE_ANON_KEY }}
-          ECHO_YOUTUBE_API_KEY: ${{ vars.ECHO_YOUTUBE_API_KEY }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

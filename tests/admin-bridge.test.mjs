@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {createHandler} from '../supabase/functions/account-admin/bridge.mjs';
+const uid='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',key='test-admin-hook-key-with-at-least-32-characters';
+let writes=[],external=[],saved=[],writePreferences=[];
+const config={url:'https://echo-api.test',anonKey:'public-key',serviceKey:'private-server-key',hookKey:key};
+const fetcher=async(url,options={})=>{if(url.endsWith('/auth/v1/user'))return options.headers.Authorization==='Bearer user-jwt'?Response.json({id:uid}):new Response('',{status:401});if(url.includes('/account_entitlements')){if(options.method==='POST'){writes.push(JSON.parse(options.body));writePreferences.push(options.headers.Prefer);return Response.json([writes.at(-1)])}return Response.json(saved)}external.push({url,options});return Response.json({ok:true,version:'2',account:{user_id:uid,account_status:'active',tier:'free',premium_until:null}})};
+const call=(handler,body,headers={})=>handler(new Request('https://echo-api.test/functions/v1/account-admin',{method:'POST',headers:{Origin:'https://jianming0718.github.io','Content-Type':'application/json',...headers},body:JSON.stringify(body)}));
+for(const hookKey of [undefined,'','short']){const handler=createHandler({...config,hookKey},fetcher);assert.equal((await call(handler,{action:'admin_update',account:{user_id:uid,account_status:'active',tier:'premium'}},{'x-echo-admin-key':''})).status,503)}
+assert.equal(writes.length,0);console.log('PASS missing, empty, or short admin secrets fail closed without database writes');
+const handler=createHandler(config,fetcher);
+assert.equal((await call(handler,{action:'admin_update',account:{user_id:uid,account_status:'active',tier:'premium'}},{Authorization:'Bearer user-jwt'})).status,401);
+assert.equal((await call(handler,{action:'sync',tier:'premium'},{Authorization:'Bearer user-jwt'})).status,400);
+assert.equal((await call(handler,{action:'sync'})).status,401);
+const disconnected=await(await call(handler,{action:'sync'},{Authorization:'Bearer user-jwt'})).json();assert.equal(disconnected.connected,false);assert.equal(disconnected.account.tier,'free');assert.equal(writes.length,0);
+console.log('PASS ordinary users cannot self-upgrade and an unconfigured Apps Script bridge reports its disconnected state');
+const admin=await call(handler,{action:'admin_update',account:{user_id:uid,account_status:'suspended',tier:'premium',premium_until:'2020-01-01'}},{'x-echo-admin-key':key});assert.equal(admin.status,200);assert.equal(writes.at(-1).user_id,uid);assert.equal((await admin.json()).account.tier,'free');
+const connected=createHandler({...config,appsScriptUrl:'https://script.google.com/macros/s/echo-script/exec'},fetcher);const response=await call(connected,{action:'sync'},{Authorization:'Bearer user-jwt'});assert.equal(response.status,200);assert.equal(writes.at(-1).user_id,uid);assert.equal(external.length,1);assert(writePreferences.at(-1).includes('ignore-duplicates'));assert.equal(JSON.parse(external[0].options.body).access_token,'user-jwt');assert(!JSON.stringify(external).includes('private-server-key'));
+const mismatched=createHandler({...config,appsScriptUrl:'https://script.google.com/macros/s/echo-script/exec'},async(url,options)=>url.includes('script.google.com')?Response.json({ok:true,version:'2',account:{user_id:other,account_status:'active',tier:'premium'}}):fetcher(url,options));const before=writes.length;assert.equal((await call(mismatched,{action:'sync'},{Authorization:'Bearer user-jwt'})).status,502);assert.equal(writes.length,before);
+saved=[{user_id:uid,account_status:'suspended',tier:'free',premium_until:null}];const held=await(await call(connected,{action:'sync'},{Authorization:'Bearer user-jwt'})).json();assert.equal(held.account.account_status,'suspended');assert.equal(held.account.tier,'free');
+console.log('PASS validated admin updates, expiry, trusted Google endpoint, own-user synchronization, and cross-user response rejection');

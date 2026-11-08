@@ -2,10 +2,10 @@
 let chatContext=null,chatGeneration=0,shareGeneration=0,friendShare=null;
 const chatPeople=new Map();
 function stopChat(){chatGeneration++;if(chatContext)clearTimeout(chatContext.timer);chatContext=null}
-function sharedMusic(track){return EchoMusicLibrary.share(track)}
+function sharedMusic(track){return track?.provider==='youtube'?null:EchoMusicLibrary.share(track)}
 function musicCard(track,action='play'){
- const t=sharedMusic(track);if(!t)return '';
- return `<div class="music-message"><img src="${esc(t.cover)}" alt="${esc(t.album||t.title)} 专辑封面"><div><strong>${esc(t.title)}</strong><span>${esc(t.artist)}</span><small>${esc(t.category)}</small></div>${action==='play'?`<button class="icon-btn" data-message-play="${esc(t.id)}" aria-label="播放 ${esc(t.title)}">${icon('play')}</button>`:action==='remove'?'<button type="button" class="icon-btn" id="remove-chat-track" aria-label="移除歌曲">'+icon('close')+'</button>':''}</div>`;
+ const t=sharedMusic(track)||(track?.provider==='youtube'?{...EchoMusicLibrary.share(track),unavailable:true}:null);if(!t)return '';
+ return `<div class="music-message"><img src="${esc(t.cover)}" alt="${esc(t.album||t.title)} 专辑封面"><div><strong>${esc(t.title)}</strong><span>${esc(t.artist)}</span><small>${esc(t.category)}</small></div>${t.unavailable?'<small>来源已停用</small>':action==='play'?`<button class="icon-btn" data-message-play="${esc(t.id)}" aria-label="播放 ${esc(t.title)}">${icon('play')}</button>`:action==='remove'?'<button type="button" class="icon-btn" id="remove-chat-track" aria-label="移除歌曲">'+icon('close')+'</button>':''}</div>`;
 }
 function displayMessage(row,uid){
  const time=new Date(row.created_at),valid=Number.isFinite(time.getTime());
@@ -56,7 +56,7 @@ function openChat(person){
 }
 function renderChatAttachment(){if(!chatContext)return;$('#chat-attachment').innerHTML=chatContext.track?musicCard(chatContext.track,'remove'):'';$('#chat-form button[type="submit"]').disabled=!$('#chat-body').value.trim()&&!chatContext.track}
 async function chooseMusicFriend(id){
- const track=sharedMusic(getTrack(id));if(!track){toast('本机音频不能直接分享，请选择在线歌曲。');return}
+ const track=sharedMusic(getTrack(id));if(!track){toast('该曲目暂不支持直接分享。');return}
  if(!cloud.user){accountPanel();return}
  const generation=++shareGeneration,uid=cloud.user.id;friendShare={uid,track,ids:new Map()};
  openSheet('分享音乐',`<h2>分享给好友</h2>${musicCard(track,'preview')}<div id="share-friends">正在加载…</div>`);sheet.dataset.panel='share';
@@ -64,13 +64,13 @@ async function chooseMusicFriend(id){
   const list=(await cloud.friends()).filter(row=>row.status==='accepted'&&row.person?.id);
   if(generation!==shareGeneration||cloud.user?.id!==uid||!sheet.open||sheet.dataset.panel!=='share')return;
   for(const row of list){chatPeople.set(row.person.id,row.person);friendShare.ids.set(row.person.id,crypto.randomUUID())}
-  $('#share-friends').innerHTML=list.length?list.map(row=>`<div class="person-row"><span class="person-avatar">${esc((row.person.display_name||'友').slice(0,1))}</span><div><strong>${esc(row.person.display_name||'好友')}</strong><small>@${esc(row.person.handle||'')}</small></div><button class="secondary-btn" data-send-music="${row.person.id}">发送</button></div>`).join(''):'<p>还没有好友。先在好友页添加对方。</p><button class="secondary-btn" id="share-open-friends">添加好友</button>';
+  $('#share-friends').innerHTML=list.length?list.map(row=>`<div class="person-row"><span class="person-avatar">${avatarMarkup(row.person)}</span><div><strong>${esc(row.person.display_name||'好友')}</strong><small>@${esc(row.person.handle||'')}</small></div><button class="secondary-btn" data-send-music="${row.person.id}">发送</button></div>`).join(''):'<p>还没有好友。先在好友页添加对方。</p><button class="secondary-btn" id="share-open-friends">添加好友</button>';
  }catch{if(generation===shareGeneration&&sheet.open&&sheet.dataset.panel==='share')$('#share-friends').innerHTML='<p>好友暂时无法加载。</p><button class="secondary-btn" data-share-friend="'+esc(id)+'">重试</button>'}
 }
 function playMessageTrack(id){
  const row=chatContext?.items.find(item=>item.track?.id===id),t=sharedMusic(row?.track);if(!t)return;
  let track=getTrack(t.id);
- if(!track){if(t.provider==='youtube')track=youtubeTrack(t);else if(t.provider==='Audius')track={...t,src:CATALOG_API+'/tracks/'+t.id.slice(7)+'/stream?app_name=Echo',remote:true,mood:'',permalink:'https://audius.co'};if(track)tracks.push(track)}
+ if(!track){if(t.provider==='Audius')track={...t,src:CATALOG_API+'/tracks/'+t.id.slice(7)+'/stream?app_name=Echo',remote:true,mood:'',permalink:'https://audius.co'};if(track)tracks.push(track)}
  if(track){if(!bundled.some(item=>item.id===track.id))Object.assign(track,{title:t.title,artist:t.artist,album:t.album,cover:t.cover,category:t.category,duration:t.duration||track.duration});playTrack(track.id,[track.id]);rememberOnline()}
 }
 document.addEventListener('click',async event=>{

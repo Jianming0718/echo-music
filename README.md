@@ -1,131 +1,64 @@
 # Echo
 
-现代简约 Web 音乐播放器。站内搜索来自 YouTube Music 的公开网页接口，播放使用 YouTube 官方嵌入播放器；也支持本机音频。邮箱账号、收藏、歌单、好友聊天与歌曲分享使用 Supabase。
+Minimal, responsive audio music player. Version 0.5.0 removes YouTube playback and the floating video frame. Music plays through native HTMLAudio using Audius public audio streams, the included licensed tracks, and files imported on the device.
 
-## 当前功能和接入状态
+- Website: https://jianming0718.github.io/echo-music/
+- Source: https://github.com/Jianming0718/echo-music
+- Private admin sheet: https://docs.google.com/spreadsheets/d/1mn55LJ8osh3hMM9SANLTb3OgT8iNCtQt8vaSsuiqZ0U/edit
 
-- 手机三个主入口：音乐、搜索、资料库；收藏和好友在资料库。播放页、歌词页使用可伸缩布局和固定视频区域；同步歌词可点击跳转，支持手动滚动后恢复跟随、LRC 导入与偏移。
-- YouTube 链接播放不需要 YouTube Data API key。播放器始终可见，保留原生控制、品牌与广告；页面进入后台时暂停 YouTube 播放。
-- 界面中的搜索入口统一称为“音乐库”，歌曲列表显示分类；支持 K-pop、J-pop、华语、欧美、纯音乐等搜索范围，以及歌曲菜单手动分类。未知分类明确显示未分类；部分艺人分类使用维护的艺人名映射，不把所有搜索结果强行标为同一曲风。
-- 已部署站内 YouTube Music 搜索：输入歌曲或歌手，直接点结果播放。支持歌曲/视频筛选、分页、请求取消与失败重试。已实际验证 BTS、韩文 BLACKPINK 搜索、TWICE 视频搜索和下一页。此功能不需要用户粘贴链接或提供 YouTube Data API key。公开网页接口不属于官方稳定 API，可能随上游变化。
-- 已连接实际 Supabase Free 项目 `echo-music`，并应用账号数据库迁移。邮箱确认保持开启，私人收藏和好友歌单受 RLS 保护。面向公众开放邮箱注册前，还需要配置 Auth 站点/回跳地址和正式 SMTP 服务；尚未验证真实注册邮件。
-- 源码已上传 https://github.com/Jianming0718/echo-music ，GitHub Pages 已部署到 https://jianming0718.github.io/echo-music/ 。后续 main 分支推送由 Actions 自动发布。
-- YouTube 视频受发布者嵌入权限、地区和网络限制，不能保证每首音乐都能嵌入，也不提供广告移除、音频提取或离线下载。
+## Music and interface
 
-## 本地运行
+Music, Search, and Library are the three mobile navigation entries. Favorites, playlists, and friends live in Library. The player supports queue editing, shuffle, repeat, seek, sleep timer, session restoration, Media Session controls, synchronized lyrics, LRC import, and lyric timing adjustment.
 
-直接运行 `python -m http.server 8000 --directory dist`，然后打开 `http://localhost:8000`。网站构建产物已包含，无需安装依赖即可预览。账号回调和 YouTube 播放正式部署请使用 HTTPS。
+The app does not create a YouTube iframe or load its player SDK. Previously saved YouTube metadata can remain visible as an unavailable source; it is not playable. Existing native/local audio continues when the playback dialog closes or the document becomes hidden, subject to browser and OS behavior. Closing the browser tab ends webpage playback.
 
-如需重建第三方 SDK：`npm ci`，然后 `npm run vendor`。使用 Node.js 24 运行 `npm test`，可验证播放器核心、真实 PostgreSQL RLS 隔离、搜索接口和 DOM 交互回归；数据库测试使用本地 PGlite，不连接生产数据库；包括聊天权限、不可伪造发送者、消息时间与 ID 分页、撤销好友访问和账号删除级联。DOM 测试不等于真机浏览器测试，尚未验证 iPhone 真机锁屏与真实 YouTube 视频播放。
+Audius search filters out gated and unavailable recordings. This catalog differs from YouTube Music and does not guarantee every commercial song. Live verification returned audio/mpeg with a successful partial-content stream response. Real iPhone/Android listening and lock-screen behavior still require device verification. Included Scott Buckley tracks can play independently of the online catalog.
 
-## 免费托管方案
+## Accounts and profile photos
 
-前端：GitHub Pages。账号、数据库和搜索函数：Supabase Free。音乐流量：由原音乐服务直接提供，不经过 GitHub 或 Supabase 转发。GitHub Pages 只托管静态文件，不能替代账号后端。
+Supabase Auth handles email registration, sign-in, password changes, and password-reset links. The change-password form sends the current password to the Auth API; new-password and recovery forms require confirmation. Passwords are never copied to Google Sheets. No real password was changed and no authentication email was sent during implementation.
 
-公开个人项目可在免费额度内起步。免费方案有使用限制；Supabase 空闲免费项目可能暂停，公开邮箱注册需要配置可用于正式用户的 SMTP 邮件服务。不能承诺无限用户、无限流量或永久零成本。官方说明：
+Profile photos are center-cropped and re-encoded to 512×512 JPEG before upload. The private `echo-avatars` bucket allows JPEG files up to 1 MiB. Storage and profile policies enforce owner paths; signed-in users can obtain temporary URLs for current profile photos. Replaced photos are removed. Account deletion first removes owned photos, then uses an account-ID guard to prevent a changed session from deleting another account.
 
-- https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages
-- https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits
-- https://supabase.com/pricing
-- https://supabase.com/docs/guides/auth/auth-smtp
+Email delivery requires Supabase SMTP and allowed callback URLs. Use the Pages URL, including `/echo-music/`, and add the retained Sites URL when using that deployment.
 
-### 部署到 GitHub Pages
+- https://supabase.com/dashboard/project/blzeipqcocynqvsgvgtb/auth/url-configuration
+- https://supabase.com/dashboard/project/blzeipqcocynqvsgvgtb/auth/smtp
 
-1. 在你控制的 GitHub 账号创建仓库，把本项目全部文件推送到 `main` 分支。GitHub Free 的免费 Pages 通常使用公开仓库。不要上传 IPA、用户音频、密码、访问令牌或 Supabase service-role/secret key。
-2. 仓库 Settings → Pages → Source 选择 GitHub Actions。
-3. Settings → Secrets and variables → Actions → Variables 添加下面的公开浏览器配置：
-   - `ECHO_SUPABASE_URL`：Supabase 项目 URL。
-   - `ECHO_SUPABASE_ANON_KEY`：Supabase publishable key，或 legacy anon key。
-   - `ECHO_YOUTUBE_API_KEY`：可选，仅在没有搜索后端时用于官方 YouTube Data API 搜索。当前站点留空也能搜索。
-4. 运行 `.github/workflows/pages.yml`。工作流生成 `dist/config.js`，然后发布 `dist`。仓库变量会覆盖已提交的公开客户端配置；变量留空时保留已有公开配置。
-5. Supabase Auth 的 Site URL 和 Redirect URLs 设置为实际 Pages 地址，包含仓库子路径及末尾斜线。项目支持 `/仓库名/` 路径，服务缓存按路径隔离。
-6. 没有连接 Supabase 时可以不设置账号变量；这会明确停用注册和云端功能。如果也没有官方 YouTube Data API key，站内搜索将提示未连接，而不会展示伪造结果。链接播放仍可用。
+## Google Apps Script and Sheets
 
-公开客户端配置也可以用环境变量运行 `node scripts/write-config.mjs` 生成。请不要把 service-role key 或 `sb_secret_` key 置入前端；配置脚本会拒绝常见的服务端 key。YouTube key 应限制为 YouTube Data API v3，并设置允许的 HTTP referrer 域名和本地开发来源。
+The private admin sheet has Users, EmailTemplates, Events, and Setup tabs. An initial snapshot of existing account metadata was copied into Users. The owner-provided Apps Script web app is published and its health endpoint reports configured: true.
 
-### 配置 Supabase
+The deployable script is in [apps-script/](apps-script/README.md). The account-admin Edge Function is deployed and authenticates users itself. The deployed bridge uses the owner-provided Apps Script URL, with `ECHO_APPS_SCRIPT_URL` available as a server-side override. Authentication and row isolation have automated tests; a real signed-in user should refresh Account details to verify the first live end-to-end sync.
 
-1. 创建 Supabase Free 项目，启用 Email/password 登录。
-2. 在 SQL Editor 执行 `supabase/migrations/20261107222638_echo_accounts.sql`，再执行 `20261107231948_friend_messages.sql`。迁移建表、索引、函数和 RLS。已有生产数据库的迁移应按顺序管理，不重复修改已应用文件。
-3. 保持邮箱确认开启，配置自定义 SMTP。Supabase 默认邮件服务只适合受限测试，不能视为任意公众注册的正式邮件服务。
-4. 配置站点 URL 和允许的注册/找回密码回调 URL。使用当前 Sites 预览时加入其站点 URL；迁移到 Pages 时加入 Pages URL。
-5. 把项目 URL 与 publishable/anon key 配置到构建变量。数据库角色限制和 RLS 必须保持启用。
-6. 用两个真实测试账号验证：确认邮件、登录、密码重设、好友请求、接受、好友歌单可见性、移除好友、账号删除。当前代码测试不会发送真实邮件或创建生产账号。
+Complete the setup in the Apps Script README: publish the web app, set `ECHO_APPS_SCRIPT_URL` in Supabase Edge Function Secrets, securely copy the generated `ECHO_ADMIN_HOOK_KEY` into the matching Supabase secret, and install the edit trigger. Never put the admin key in the browser, Sheet cells, chat, or GitHub.
 
-数据表为 `profiles`、`likes`、`playlists`、`playlist_items`、`friendships` 和 `messages`。密码和邮箱由 Supabase Auth 管理。用户名搜索只返回公开昵称、用户名与账号 ID。收藏为私有；歌单默认为私有，可明确改为好友可见；好友只读共享歌单，不能改写。只有接收方能接受申请。删除好友撤销共享读取权限。
+Users cannot self-grant Premium or change their account status. Inactive accounts are restricted by database RLS. Expired Premium is treated as free. Membership is an Echo account flag; no checkout or paid feature is invented. Notification emails use disabled-by-default templates and an explicit owner action. Authentication emails continue through Supabase Auth.
 
-前端通过官方 Supabase JS SDK 管理会话，不自行保存明文密码。未完成的收藏/歌单同步进入按账号隔离的本机队列，恢复网络后重试。退出登录恢复访客资料。合并访客收藏和歌单需要用户在账号页主动选择。本机音频不上传，其他设备只会获得歌曲资料，必须导入对应文件后播放。
+The owner completed Google deployment because the available connector cannot publish Apps Script. Admin edits additionally require the matching private hook key and installed edit trigger. The prepared private setup package is also available at https://drive.google.com/file/d/1A4IvlGQENgKVpCxwhYr2GYuWUDuF75Zv/view .
 
-## YouTube Music 搜索后端
+## Friends
 
-`supabase/functions/youtube-search/` 是部署在已有 Free 项目的 Edge Function，当前版本已上线。它只请求 YouTube Music 公开网页搜索接口，不提取音频、不传用户 Cookie，不使用 Spotify 或 IPA 二进制。前端向同一 Supabase 项目的 `/functions/v1/youtube-search` 发送关键词和结果类型。
+Accepted friends can send text and playable song cards, load earlier messages, and retry failed sends with the same message ID. Chats poll while open and visible; drafts stay in memory. Message text is escaped and arbitrary audio URLs are not accepted through song cards. Removing a friendship revokes access; account deletion cascades its conversations. Chat is not end-to-end encrypted.
 
-函数自行校验浏览器 publishable key 所属项目，因此该函数的 `verify_jwt` 设为 false；不接受服务端 secret key，不访问私人资料。允许来源为当前 Sites、`https://jianming0718.github.io`、本机开发地址。更换域名需要更新函数中的来源列表。每个运行实例有内存缓存和速率限制；这些限制不会跨实例共享。公开浏览器 key 不能防止所有滥用，请按实际访问量关注 Free 额度。
+## Run and verify
 
-复制到新的 Supabase 项目时，在该项目部署 `youtube-search`，入口 `index.ts`，包含 `music.mjs`。`supabase/config.toml` 保留单个函数的认证配置；前端使用该项目 publishable key。账号数据库的 RLS 和 Email Auth 配置独立于搜索函数，继续保持开启。
+Use Node.js 24 for development. `npm ci`, then `npm test` runs playback, PostgreSQL permissions, avatar/account rules, Apps Script, account-bridge, UI, chat, password/photo, and cache regression tests. Database tests use local PGlite and do not change production data.
 
-## 播放与歌词
+Serve the app with `python -m http.server 8000 --directory dist`. The static output is already present. `npm run config` writes public browser configuration. `npm run vendor` rebuilds the pinned official Supabase SDK. Only publishable or legacy anon keys belong in browser configuration; service-role and admin-hook secrets remain server-side.
 
-`dist/player-core.js` 为原生 Web 播放核心，管理 HTMLAudio 兼容接口、队列、历史、非重复随机、循环、Play next、错误恢复、恢复进度和 Media Session。
+The current environment has no available browser-control tool. DOM and media behavior tests use controlled models; actual email delivery, Google deployment, and device UI require verification.
 
-`dist/media-transport.js` 在本机/HTTP 音频和官方 YouTube IFrame Player 之间切换。视频播放保持可见且至少 200×200，不遮挡原生控制，不提取纯音频，不绕过广告与权限。手机播放页为视频预留独立区域，浮窗不重建 iframe，布局改变时重新对齐。YouTube 播放进入后台或被模态界面完全遮挡时暂停。YouTube 影片版本与原曲版本时长可能不同，无法保证自动歌词匹配；可以导入自己的 LRC 并调整时间偏移。
+## Deploy
 
-本机/普通音频继续使用原生音频与 Media Session，页面隐藏时应用不主动暂停；具体锁屏行为取决于浏览器和设备。关闭标签页、退出浏览器后不能由网页继续播放。YouTube 官方嵌入播放仍在后台暂停，没有实现后台播放绕过。
+GitHub Pages publishes `dist` from main using `.github/workflows/pages.yml`. Public Supabase variables can override the committed public configuration. The static site works under a repository path; the service worker and versioned assets preserve local user data while updating code.
 
-歌词由 LRCLIB 查询，移除常见视频标题标签并在精确查询未命中时按标题、歌手和时长匹配；纯文本歌词明确显示不同步。导入歌词、文件和播放状态属于本机数据。隐私说明在 `dist/privacy.html`。
+Supabase Free project: `blzeipqcocynqvsgvgtb`, region `us-east-1`. Apply the SQL files in `supabase/migrations/` in order. Their contents match applied hosted migrations. Functions are in `supabase/functions/`. The retired YouTube search endpoint returns 410 and is not used by the app.
 
-## 文件
+Free services have quotas; no paid plan was enabled. Supabase's existing leaked-password-protection notice remains: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .
 
-- `dist/index.html`、样式、`dist/app.js`：界面与功能。
-- `dist/player-core.js`：通用播放核心。
-- `dist/media-transport.js`：YouTube/音频适配。
-- `dist/account-service.js`：认证、云端读写、好友与同步队列。
-- `dist/config.js`：公开浏览器配置。
-- `supabase/migrations/`：后端表、事务与权限。
-- `.github/workflows/pages.yml`：GitHub Pages 发布。
-- `scripts/`：公开配置与第三方依赖构建。
-- `tests/`：播放器与数据库权限测试。
+## License
 
-## 许可和来源
+Echo code is MIT, see LICENSE. Third-party media and SDK retain their licenses. Included Sanctuary, Hiraeth, Childhood, and Moonlight are by Scott Buckley, https://www.scottbuckley.com.au, CC BY 4.0, https://creativecommons.org/licenses/by/4.0/. Audio is encoded at 128 kbps. Photos are from Unsplash; Inter uses the SIL Open Font License. Software licenses are in `dist/vendor/`.
 
-Echo 自有代码为 MIT，见 `LICENSE`。第三方媒体与软件保持各自许可。
-
-精选音频 Sanctuary、Hiraeth、Childhood、Moonlight：Scott Buckley，https://www.scottbuckley.com.au ，CC BY 4.0，https://creativecommons.org/licenses/by/4.0/ 。曲目完整保留，以 128 kbps 编码。精选照片来自 Unsplash。Inter 字体采用 SIL Open Font License。第三方 SDK 授权文本在 `dist/vendor/`。
-
-YouTube 影片、元数据及品牌归相应权利方。推荐影片链接指向相应官方 MV，不在仓库托管影片。适配遵循官方播放器接口，参考 https://developers.google.com/youtube/iframe_api_reference 和 https://developers.google.com/youtube/terms/developer-policies 。
-
-Echo 是独立项目，不属于 Spotify、YouTube、Apple 或 NetEase。项目不含上传 IPA 中的 Spotify/Eevee 二进制、源码或订阅绕过逻辑。
-
-
-## 当前账号后端
-
-项目：`echo-music`，区域：`us-east-1`，创建报价：$0/月（Free 额度内）。项目 ID：`blzeipqcocynqvsgvgtb`。浏览器仅使用公开 publishable key。实际数据库已应用 `20261107222638_echo_accounts.sql`；该文件内容与已应用迁移保持一致。
-
-Auth 配置入口：
-
-- 站点与回跳：https://supabase.com/dashboard/project/blzeipqcocynqvsgvgtb/auth/url-configuration
-- 邮件服务：https://supabase.com/dashboard/project/blzeipqcocynqvsgvgtb/auth/smtp
-
-正式主站可设为 `https://jianming0718.github.io/echo-music/`。允许回跳地址也应包含当前 Sites 地址 `https://echo-music-free-player.stablepeace1.chatgpt.site/`。保留邮箱确认，不通过关闭确认来绕过邮件配置。
-
-源码仓库：https://github.com/Jianming0718/echo-music 。主站：https://jianming0718.github.io/echo-music/ 。GitHub 授权和 Pages 设置已完成，后续代码推送触发自动发布；当前 Sites 站点也会继续更新。
-
-
-## 好友聊天与歌曲分享
-
-双方确认好友后可以打开聊天、发送文字或歌曲卡片，卡片可直接加入当前播放器播放。聊天支持加载更早记录、失败保留草稿、使用相同消息 ID 重试防止重复；未发送的草稿仅在内存中，不写入浏览器永久存储。聊天打开且页面可见时每 12 秒刷新，切换页面或退出账号后停止刷新；不展示虚构的在线状态或已读回执。
-
-`messages` 表启用 RLS，只允许已确认好友中的发送者或接收者读取。发送者必须是当前账号，时间由服务器生成，消息不可被客户端修改。聊天仅通过已授权 RPC 和带 RLS 的插入访问，不使用管理密钥。移除好友后双方不能继续读取或发送；旧记录保留在服务端，删除任一参与者账号时级联删除。分享的是歌曲资料，不复制音频；本机导入文件不能直接发送给好友。
-
-聊天界面转义文字和昵称，歌曲封面只接受允许的媒体域名和已知本机素材。歌曲分享只支持已识别的在线播放来源和内置授权曲目；不会按消息中的任意 URL 加载音频。当前已完成自动化数据库权限与 DOM 交互测试，未向真实好友发送测试消息，也没有完成两台真机账号联调。公开邮箱注册仍需运营者完成 SMTP 与 Auth 回调配置。
-
-最新数据库安全检查中，消息表 RLS 和调用者权限函数已确认开启；Auth 的泄露密码检测未启用，说明与配置入口：[Supabase password security](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)。不为该选项自动升级付费方案。
-
-
-## 0.4.1 播放与缓存修正
-
-已准备好的 YouTube 播放器直接在 Echo 按钮的点击调用链中接收 `playVideo` 或 `loadVideoById` 指令，中间不再等待已完成的 Promise。iframe 在开始导航前明确声明 autoplay 权限、来源和 referrer policy。取消加载、切歌过程中延迟到达的暂停事件不会取消下一次播放请求；只有视频真正报告播放状态时才显示正在播放。嵌入错误显示 YouTube 错误码，浏览器阻止自动开始时显示确认提示；发布者禁用嵌入时可以搜索其他版本。
-
-HTML 的脚本和样式使用版本参数，Service Worker 更新及资源校验避开旧 HTTP 缓存。版本号在设置页显示，刷新到最新版不会清除账号、本机音频、收藏或歌单。可使用 `?v=0.4.1` 打开本次版本。
-
-自动化测试验证同步 API 调用、权限属性、真实播放状态、取消加载、自动播放拒绝恢复、错误提示和离线资源更新。当前环境无可用浏览器测试工具；这些检查使用可控播放器模型，不能证明所有真实浏览器都允许自动开始。首次网络初始化、iPhone、内嵌浏览器或严格的浏览器策略仍可能需要用户点视频中的原生按钮。没有隐藏视频、伪造可信点击或模拟音频流；可见官方播放器继续保留。
+Echo is independent of Audius, Google, Supabase, Spotify, Apple, and NetEase. Uploaded IPA binaries and subscription bypass code are not part of the project.

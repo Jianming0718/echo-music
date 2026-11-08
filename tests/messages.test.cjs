@@ -3,6 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222',C='33333333-3333-4333-8333-333333333333';
 (async()=>{
  const db=new PGlite();await db.exec(`create schema auth;create role anon;create role authenticated;create table auth.users(id uuid primary key);create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id) on delete cascade);create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid() to authenticated,anon;insert into auth.users values('${A}'),('${B}'),('${C}');`);
+ await require('./storage-fixture.cjs')(db);
  const root=path.join(__dirname,'../supabase/migrations');for(const file of fs.readdirSync(root).sort())await db.exec(fs.readFileSync(path.join(root,file),'utf8'));
  await db.exec(`insert into public.profiles(id,handle,display_name) values('${A}','alice','Alice'),('${B}','bob','Bob'),('${C}','carol','Carol');insert into public.friendships(requester_id,addressee_id,status) values('${A}','${B}','accepted'),('${A}','${C}','pending');`);
  const login=uid=>db.exec(`reset role;select set_config('request.jwt.claim.sub','${uid}',false);set role authenticated;`);
