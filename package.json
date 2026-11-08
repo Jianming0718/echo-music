@@ -1,13 +1,13 @@
 {
   "name": "echo-music",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "type": "module",
   "license": "MIT",
   "scripts": {
     "config": "node scripts/write-config.mjs",
     "vendor": "node scripts/vendor.mjs",
-    "test": "node tests/player-core.test.cjs && node tests/database.test.cjs && node tests/messages.test.cjs && node tests/account-security.test.cjs && node tests/admin-users.test.mjs && node tests/admin-ui.test.cjs && node tests/admin-bridge.test.mjs && node tests/apps-script.test.cjs && node tests/sheets-backend.test.cjs && node tests/sheets-client.test.cjs && node tests/avatar-storage.test.mjs && node tests/search.test.mjs && node tests/video-playback.test.cjs && node tests/ui.test.cjs && node tests/social.test.cjs && node tests/account.test.cjs && node tests/presentation.test.cjs && node tests/ad-helper.test.cjs && node tests/artist-parser.test.mjs && node tests/music-profile-endpoint.test.cjs && node tests/appearance-artist.test.cjs && node tests/cache.test.cjs",
+    "test": "node tests/player-core.test.cjs && node tests/database.test.cjs && node tests/messages.test.cjs && node tests/account-security.test.cjs && node tests/cutover-guard.test.cjs && node tests/admin-users.test.mjs && node tests/admin-ui.test.cjs && node tests/admin-bridge.test.mjs && node tests/apps-script.test.cjs && node tests/sheets-backend.test.cjs && node tests/sheets-client.test.cjs && node tests/avatar-storage.test.mjs && node tests/search.test.mjs && node tests/video-playback.test.cjs && node tests/ui.test.cjs && node tests/social.test.cjs && node tests/account.test.cjs && node tests/presentation.test.cjs && node tests/ad-helper.test.cjs && node tests/artist-parser.test.mjs && node tests/music-profile-endpoint.test.cjs && node tests/appearance-artist.test.cjs && node tests/cache.test.cjs",
     "apps-script:build": "node scripts/vendor-password.mjs && node scripts/package-apps-script.mjs"
   },
   "dependencies": {

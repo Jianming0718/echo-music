@@ -1,2 +1,2 @@
-import {createAdminHandler} from './admin.mjs';
-Deno.serve(createAdminHandler({url:Deno.env.get('SUPABASE_URL')||'',anonKey:Deno.env.get('SUPABASE_ANON_KEY')||'',serviceKey:Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||''}));
+const allowed=new Set(['https://jianming0718.github.io','https://echo-music-free-player.stablepeace1.chatgpt.site','http://localhost:8000','http://127.0.0.1:8000']);
+Deno.serve(request=>{const origin=request.headers.get('origin')||'',headers={'Cache-Control':'no-store','Access-Control-Allow-Origin':allowed.has(origin)?origin:'null','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info, x-echo-admin-key','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'};if(request.method==='OPTIONS')return new Response(null,{status:204,headers});return Response.json({error:'ACCOUNT_BACKEND_MOVED',message:'Echo account data is moving to Google Sheets. Refresh Echo after activation.'},{status:410,headers});});

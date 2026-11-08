@@ -1,12 +1,14 @@
 # Echo Apps Script version 3
 
-Version 3 adds a complete Google Sheets account/data backend. The published website continues using Supabase until the cutover is explicitly completed. The existing administrator account has been enabled in Supabase and marked `admin` in the private Users sheet. Imported data is a staged snapshot, not yet the live database.
+Version 3 is active for the current Echo project. Website version 0.9.1 uses Apps Script and private Google Sheets for password authentication and account data. The operator is `admin` in Users. Original account IDs are retained and existing users set a new password through email. Supabase account-data access and legacy Edge entrypoints are closed; avatar storage and music-search/artist functions remain available. The old database is a restricted migration archive, not the live account database.
 
 Private management sheet: https://docs.google.com/spreadsheets/d/1mn55LJ8osh3hMM9SANLTb3OgT8iNCtQt8vaSsuiqZ0U/edit
 
 Existing web app: https://script.google.com/macros/s/AKfycbzyabVdmmaYivsQ-ji_vHVVz6EzSxMG8wFKjj5WGW4TX7SvKkNb34HTuRktlNyo1jIdNg/exec
 
-## Update the existing script now
+## Updating or reproducing the script
+
+For the current live project, keep `ECHO_DATA_MODE=sheets`. The staged steps below describe an initial installation or another verified migration.
 
 1. Open the private sheet → Extensions → Apps Script. Replace the entire existing **Code.gs** with the complete **Code.gs** from this package. This file already includes the password library and all service modules. Keep the existing **Config.gs**, manifest and Script Properties. Do not add separate copies of the files under `src` or `vendor` to the Apps Script editor.
 2. Run **installEchoSheets** once and grant the requested Google permissions. It preserves existing rows and role/status/membership controls, creates any missing data tabs and private password pepper, and checks the existing private avatar connection. It sends no email. Leave `ECHO_DATA_MODE` as **staged**.
@@ -21,7 +23,7 @@ The operator must freeze legacy account-data writes, take a fresh snapshot and r
 
 After the final verified import, run **activateEchoSheets**. Publish the frontend with `accountBackend: "sheets"` and the existing `appsScriptUrl`; the shipped frontend adapter is ready. Existing users select Forgot password and create a new password via email. No old passwords are exported and no reset email is sent automatically during migration. Their original IDs retain their profiles, likes, playlists, friendships and chats. Old sessions are not imported.
 
-The next verification must exercise real browser CORS, the Apps Script password runtime, delivery to a requested mailbox, two-account access isolation and avatar upload/signing. Local tests cannot establish Google deployment permissions or mail delivery. Keep the legacy source intact until these checks pass. The Supabase project currently also serves music-search/artist functions; moving account data does not relocate those functions or remove avatar storage. Do not delete or pause the project.
+Production verification checks the HTTP/CORS responses and temporary-account data isolation, friends/chat, and avatar upload/signing. Actual sign-in and reset email delivery still require a user to request a reset and complete it in their browser. Local tests cannot establish Google deployment permissions or mail delivery. Keep the legacy source intact until these checks pass. The Supabase project currently also serves music-search/artist functions; moving account data does not relocate those functions or remove avatar storage. Do not delete or pause the project.
 
 After cutover, disable the legacy status edit trigger: the new API reads status, tier, expiry and role directly from Sheets. The version 3 trigger already exits in Sheets mode. Editing those cells does not require a separate database synchronization.
 
@@ -60,3 +62,11 @@ GitHub Pages remains the static frontend host. Local files remain on the device.
 ## Reproduce
 
 From the source checkout, run `npm ci`, then `npm run apps-script:build`. This produces the complete `apps-script/Code.gs` from `src` and the pinned password dependency. The synchronous bcrypt bundle includes a GAS runtime shim and does not require Node crypto, browser timers or Web Crypto. MIT license for bcryptjs is in `vendor/BCRYPT-LICENSE.txt`.
+
+## Legacy access freeze
+
+Migration `echo_sheets_cutover_guard` adds a private operator-controlled state and starts open for a safe schema deployment. The verified cutover then sets `legacy_open=false`. Restrictive SELECT policies hide archived account rows from legacy clients. Row triggers block both client and service-role mutations; the account-deletion helper also checks the guard. The private avatar bucket denies legacy authenticated access while the server-only storage role remains usable. Legacy `account-admin` and `admin-users` entrypoints return 410 with no account data. Their old handler implementations remain in source for an explicit rollback.
+
+The state table intentionally has RLS enabled without listener policies or grants; only the operator and security-definer helpers access it. The corresponding informational Supabase advisor is expected. The existing Supabase Auth leaked-password-protection warning relates to the retired authentication service: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+
+Rollback requires a deliberate frontend/backend coordination and restoration of the old Edge entrypoints as well as reopening the private state. Do not reopen the old store while clients write to Sheets. Archived records are retained pending new-service verification, and are not silently deleted.
