@@ -9,13 +9,13 @@ function musicCard(track,action='play'){
 }
 function displayMessage(row,uid){
  const time=new Date(row.created_at),valid=Number.isFinite(time.getTime());
- return `<li class="chat-message ${row.sender_id===uid?'outgoing':'incoming'}" data-message="${row.id}">${row.body?`<p>${esc(row.body)}</p>`:''}${musicCard(row.track)}<time ${valid?`datetime="${time.toISOString()}"`:''}>${valid?esc(time.toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})):''}</time></li>`;
+ return `<li class="chat-message ${row.sender_id===uid?'outgoing':'incoming'}" data-message="${row.id}">${row.body?`<p>${esc(row.body)}</p>`:''}${musicCard(row.track)}<time ${valid?`datetime="${time.toISOString()}"`:''}>${valid?esc(time.toLocaleString(EchoI18n.locale,{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})):''}</time></li>`;
 }
 function renderChatMessages(context,keepPosition=false){
  if(chatContext!==context||view!=='chat'||cloud.user?.id!==context.uid)return;
  const area=$('#chat-scroll');if(!area)return;
  const height=area.scrollHeight,top=area.scrollTop,atEnd=height-top-area.clientHeight<80;
- const signature=context.items.map(row=>row.id).join(',');
+ const signature=EchoI18n.language+context.items.map(row=>row.id).join(',');
  if(context.signature!==signature){
   context.signature=signature;
   $('#chat-messages').innerHTML=context.items.length?context.items.map(row=>displayMessage(row,context.uid)).join(''):'<li class="chat-empty">还没有消息</li>';
@@ -109,3 +109,5 @@ document.addEventListener('submit',async event=>{
 cloud.addEventListener('session',()=>{if(chatContext&&cloud.user?.id!==chatContext.uid){stopChat();setView('friends')}if(friendShare&&cloud.user?.id!==friendShare.uid){friendShare=null;shareGeneration++;if(sheet.dataset.panel==='share')sheet.close()}});
 document.addEventListener('visibilitychange',()=>{if(chatContext){clearTimeout(chatContext.timer);if(!document.hidden)refreshChat()}});
 window.addEventListener('pagehide',()=>{if(chatContext)clearTimeout(chatContext.timer)});
+
+document.addEventListener('echo:languagechange',()=>{if(chatContext)renderChatMessages(chatContext,true)});
