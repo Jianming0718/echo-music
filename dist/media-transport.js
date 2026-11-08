@@ -7,7 +7,7 @@ class EchoMediaTransport extends EventTarget {
   }
   get src(){return this.source}
   set src(value){
-    this.generation++;this.playRequest++;this.wantVideoPlayback=false;this.startedVideoId=null;this.needsVideoLoad=true;
+    globalThis.EchoAdHelper?.cancel();this.generation++;this.playRequest++;this.wantVideoPlayback=false;this.startedVideoId=null;this.needsVideoLoad=true;
     this.rejectPending(Object.assign(new Error('Source changed'),{name:'AbortError'}));this.source=String(value);
     const match=this.source.match(/^youtube:([A-Za-z0-9_-]{11})$/);this.provider=match?'youtube':'audio';this.videoId=match?.[1]||null;this.setIssue(null);
     if(match){
@@ -47,14 +47,14 @@ class EchoMediaTransport extends EventTarget {
         frame.src=url.href;this.container.replaceChildren(frame);
         let initialized=false;
         this.youtube=new YT.Player(frame,{events:{
-          onReady:()=>{clearTimeout(this.readyTimeout);initialized=true;this.youtubeReady=true;this.youtube.setVolume(this.videoState.volume*100);resolve(this.youtube)},
+          onReady:()=>{clearTimeout(this.readyTimeout);initialized=true;this.youtubeReady=true;this.youtube.setVolume(this.videoState.volume*100);globalThis.EchoAdHelper?.bind({player:this.youtube,getVolume:()=>this.videoState.volume,active:()=>this.provider==='youtube'&&this.youtube.getVideoData?.()?.video_id===this.videoId});resolve(this.youtube)},
           onStateChange:event=>this.onVideoState(event.data),
           onError:event=>{
             if(this.provider!=='youtube')return;
             const activeId=this.youtube?.getVideoData?.()?.video_id;if(activeId&&activeId!==this.videoId)return;
             const code=Number(event.data),messages={2:'视频参数无效，请重新选择歌曲。',5:'YouTube 视频解码失败，请重试或换一个版本。',100:'视频已移除或设为私密。',101:'发布者不允许嵌入播放此视频。',150:'发布者不允许嵌入播放此视频。',153:'YouTube 无法验证网页来源，请直接在浏览器打开本站后重试。'};
             const message=(messages[code]||'YouTube 暂时无法播放此视频。')+'（YouTube '+code+'）';
-            this.wantVideoPlayback=false;this.videoState.error={code:4,message};this.videoState.paused=true;this.setIssue({kind:'error',code,message});
+            globalThis.EchoAdHelper?.cancel();this.wantVideoPlayback=false;this.videoState.error={code:4,message};this.videoState.paused=true;this.setIssue({kind:'error',code,message});
             this.rejectPending(new Error(message));this.dispatchEvent(new Event('error'));
             if(!initialized){clearTimeout(this.readyTimeout);reject(new Error(message))}
           },
@@ -83,6 +83,7 @@ class EchoMediaTransport extends EventTarget {
       const pending={resolve:()=>{clearTimeout(pending.timeout);if(this.pendingPlay===pending)this.pendingPlay=null;resolve()},reject:error=>{clearTimeout(pending.timeout);if(this.pendingPlay===pending)this.pendingPlay=null;reject(error)}};
       pending.timeout=setTimeout(()=>{if(this.pendingPlay===pending)this.blocked()},15000);this.pendingPlay=pending;
       try{
+        globalThis.EchoAdHelper?.prepare();
         if(!this.needsVideoLoad&&yt.getVideoData?.()?.video_id===this.videoId)yt.playVideo();
         else{this.needsVideoLoad=false;yt.loadVideoById({videoId:this.videoId,startSeconds:this.videoState.time||0})}
         if(yt.getPlayerState?.()===1)this.onVideoState(1);
@@ -92,12 +93,12 @@ class EchoMediaTransport extends EventTarget {
   blocked(){
     if(this.provider!=='youtube')return;
     const message='浏览器阻止了播放，请再点一次播放；若仍无声，可在 YouTube 打开。';
-    this.wantVideoPlayback=false;this.videoState.paused=true;this.setIssue({kind:'gesture',message});
+    globalThis.EchoAdHelper?.cancel();this.wantVideoPlayback=false;this.videoState.paused=true;this.setIssue({kind:'gesture',message});
     this.rejectPending(Object.assign(new Error(message),{name:'NotAllowedError'}));
     if(this.youtubeReady)this.youtube.pauseVideo();this.dispatchEvent(new Event('gestureblocked'));this.dispatchEvent(new Event('pause'));
   }
   pause(){
-    this.playRequest++;this.wantVideoPlayback=false;
+    globalThis.EchoAdHelper?.cancel();this.playRequest++;this.wantVideoPlayback=false;
     if(this.provider==='audio')this.element.pause();
     else{this.rejectPending(Object.assign(new Error('Paused'),{name:'AbortError'}));this.videoState.paused=true;this.youtubeReady&&this.youtube.pauseVideo();this.dispatchEvent(new Event('pause'))}
   }

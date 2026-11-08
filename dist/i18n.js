@@ -1,6 +1,30 @@
 'use strict';
 (() => {
- const rows=`音乐\tMusic
+ const rows=`管理员\tAdministrator
+用户管理\tManage users
+编辑用户\tEdit user
+编辑\tEdit
+返回用户列表\tBack to users
+保留当前头像\tKeep current photo
+移除头像\tRemove photo
+保存用户资料\tSave user profile
+用户资料已保存。\tUser profile saved.
+用户管理暂不可用\tUser management unavailable
+仅管理员可操作。\tAdministrator access required.
+管理员可修改昵称、用户名和头像；账号状态与会员仍由私有管理表维护。\tAdministrators can edit names, handles, and photos. Account status and membership remain controlled by the private management sheet.
+选择现有头像时，服务器会复制到目标账号目录，不会修改来源用户的照片。\tThe server copies the selected photo into the target account’s directory without changing the source photo.
+请在 Userscripts 中更新已安装脚本至 0.2.0；只刷新网页不会更新旧脚本。\tUpdate the installed script to 0.2.0 in Userscripts. Refreshing this website alone will not update an older script.
+脚本版本过旧，请更新至 0.2.0\tScript outdated. Update to 0.2.0.
+已检测到广告，正在静音并尝试加速\tAd detected; muting and trying to accelerate
+脚本尝试点击跳过按钮，并对明确标记的广告静音和加速。新版增加多视频检测与播放前静音保护；连接状态不代表广告已跳过，部分广告仍需要等待。\tThe script tries skip buttons and mutes and accelerates marked ads. This update adds multi-video detection and startup muting. Connected does not mean an ad was skipped; some ads still require waiting.
+请重新登录。\tPlease sign in again.
+这个用户名已被使用。\tThis handle is already taken.
+请检查昵称和用户名。\tCheck the display name and handle.
+头像路径格式无效。\tInvalid photo path.
+头像复制失败，请确认来源照片存在。\tPhoto copy failed. Check that the source photo exists.
+未找到该用户。\tUser not found.
+用户管理暂时不可用，请重试。\tUser management unavailable. Please retry.
+音乐\tMusic
 搜索\tSearch
 资料库\tLibrary
 收藏\tFavorites
@@ -117,7 +141,6 @@ LYRICS\tLyrics
 歌词服务繁忙，请稍后重试。\tThe lyrics service is busy. Please try again shortly.
 已导入歌词\tImported lyrics
 歌词来源\tLyrics from
-Lyrics via LRCLIB\tLyrics via LRCLIB
 账号\tAccount
 登录\tSign in
 注册\tSign up

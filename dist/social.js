@@ -48,7 +48,7 @@ async function refreshChat(older=false){
 function openChat(person){
  if(!cloud.user){accountPanel();return}
  if(!person?.id||person.id===cloud.user.id)return;
- stopChat();cancelCatalog();sheet.close();if(now.open)now.close();view='chat';
+ stopChat();cancelCatalog();sheet.close();if(now.open)now.close();view='chat';$('#page-title').textContent='聊天';
  const context={uid:cloud.user.id,person,items:[],track:null,draftId:null,signature:null,loaded:false,hasMore:false,loading:false,timer:null};chatContext=context;chatPeople.set(person.id,person);
  main.innerHTML=`<section class="chat-shell" aria-label="与 ${esc(person.display_name||'好友')} 聊天"><header class="chat-heading"><button class="icon-btn" id="chat-back" aria-label="返回好友">${icon('prev')}</button><div><h1>${esc(person.display_name||'好友')}</h1><span>${person.handle?'@'+esc(person.handle):''}</span></div><button class="icon-btn" id="chat-refresh" aria-label="刷新消息">${icon('repeat')}</button></header><div class="chat-scroll" id="chat-scroll"><button class="text-button" id="chat-older" hidden>更早的消息</button><ol id="chat-messages" role="log" aria-label="聊天消息" aria-live="polite" aria-relevant="additions"></ol></div><p id="chat-status" class="chat-status" role="status">正在加载…</p><div id="chat-attachment"></div><form id="chat-form" class="chat-form"><label for="chat-body">消息</label><textarea id="chat-body" name="body" maxlength="2000" rows="2" aria-label="消息"></textarea><div><button type="button" class="text-button" id="attach-current-song">${icon('disc')} 分享正在播放</button><button class="primary-btn" type="submit" disabled>发送</button></div></form></section>`;
  $$('[data-view]').forEach(button=>{button.classList.remove('active');button.removeAttribute('aria-current')});
