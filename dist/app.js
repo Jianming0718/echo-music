@@ -1,5 +1,5 @@
 'use strict';
-const ECHO_RELEASE='0.18.0';
+const ECHO_RELEASE='0.18.1';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const icon=(name)=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;

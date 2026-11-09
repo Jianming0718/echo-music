@@ -215,6 +215,8 @@ Premium 已到期\tPremium expired
 发布动态\tNew post
 收起编辑器\tClose composer
 删除评论\tDelete comment
+正在加载评论…\tLoading comments…
+评论暂时无法加载。\tComments are temporarily unavailable.
 更早的评论\tOlder comments
 弹幕\tSong comments
 分享一首歌，开始你们的音乐动态。\tShare a song to start your music feed.
