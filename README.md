@@ -1,3 +1,7 @@
+# Independent audio playback — test deployment only
+
+The audio-only candidate is deployed at [the Netlify test site](https://echo-audio-test--music-echo.netlify.app/). **Real-song playback remains blocked by YouTube’s “Sign in to confirm you’re not a bot” response, including after anonymous attestation. The existing Echo production player has not been switched.** All source remains in the `feature/audio-only` GitHub branch. See [deployment evidence and limitations](docs/audio-only-netlify.md).
+
 # Echo
 
 Minimal, responsive music player. Version 0.17.1 keeps the YouTube Music search and playback engine with its video surface outside the visible layout, adds high-resolution responsive artwork, and supports Chinese and English in Settings. Password, avatar, Apps Script, membership, friends, and chat features from 0.5.0 are retained. Native audio still supports Audius streams, included licensed tracks, and files imported on the device. The optional Safari ad-helper script requires installing and authorizing the free Userscripts extension; actual ad skipping still needs verification on an iPhone. Settings now support light/dark themes and an opt-in animated background. Official Lucide icons, synchronized now-playing volume, artist profiles, album/single browsing, and verified release-date precision are included.

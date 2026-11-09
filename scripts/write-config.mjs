@@ -16,5 +16,11 @@ if(!['supabase','sheets'].includes(accountBackend))throw Error('Unknown account 
 const appsScriptUrl=(process.env.ECHO_APPS_SCRIPT_URL||existing.appsScriptUrl||'').trim();
 if(appsScriptUrl&&!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(appsScriptUrl))throw Error('Use the Apps Script /exec deployment URL.');
 if(accountBackend==='sheets'&&!appsScriptUrl)throw Error('The Sheets backend requires its Apps Script URL.');
-await writeFile(new URL('../dist/config.js',import.meta.url),"'use strict';\nwindow.ECHO_CONFIG=Object.freeze("+JSON.stringify({supabaseUrl,supabaseAnonKey,accountBackend,appsScriptUrl})+");\n");
-console.log('Public browser configuration written. Accounts: '+Boolean(supabaseUrl)+'. Music library: YouTube Music; native audio and local files are retained.');
+const playbackMode=process.env.ECHO_PLAYBACK_MODE||existing.playbackMode||'youtube-embed';
+if(!['youtube-embed','audio-only'].includes(playbackMode))throw Error('Unknown playback mode.');
+const netlifyOrigin=process.env.NETLIFY==='true'?(process.env.DEPLOY_PRIME_URL||process.env.URL||''):'';
+const audioGatewayUrl=(process.env.ECHO_AUDIO_GATEWAY_URL||(netlifyOrigin?new URL('/api/audio',netlifyOrigin).href:'')||existing.audioGatewayUrl||'').trim();
+if(audioGatewayUrl){const url=new URL(audioGatewayUrl);if(url.protocol!=='https:'||url.username||url.password||url.search||url.hash)throw Error('Use an HTTPS audio endpoint without credentials or query parameters.');}
+if(playbackMode==='audio-only'&&!audioGatewayUrl)throw Error('Audio-only playback requires ECHO_AUDIO_GATEWAY_URL or a Netlify deployment URL.');
+await writeFile(new URL('../dist/config.js',import.meta.url),"'use strict';\nwindow.ECHO_CONFIG=Object.freeze("+JSON.stringify({supabaseUrl,supabaseAnonKey,accountBackend,appsScriptUrl,playbackMode,...(audioGatewayUrl?{audioGatewayUrl}:{})})+");\n");
+console.log('Public browser configuration written. Playback: '+playbackMode+'.');

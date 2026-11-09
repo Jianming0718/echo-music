@@ -1,0 +1,26 @@
+[build]
+  command = "node scripts/check-audio-build.mjs"
+  publish = "audio-gateway-public"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "24"
+  NPM_FLAGS = "--ignore-scripts --omit=dev"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["youtubei.js", "quickjs-emscripten", "bgutils-js", "jsdom-proof"]
+
+[[edge_functions]]
+  function = "audio-probe"
+  path = "/api/audio/edge-probe"
+
+[[headers]]
+  for = "/config.js"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/api/audio*"
+  [headers.values]
+    Cache-Control = "no-store"

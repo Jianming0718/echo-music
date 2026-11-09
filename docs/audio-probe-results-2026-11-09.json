@@ -1,0 +1,138 @@
+{
+  "date": "2026-11-09",
+  "deployment": "6af222f6f462b4da0e17f011",
+  "site": "https://echo-audio-test--music-echo.netlify.app",
+  "results": [
+    {
+      "id": "c6ASQOwKkhk",
+      "profile": "visionos",
+      "httpStatus": 200,
+      "ms": 1672,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "UNPLAYABLE",
+      "sourceReason": "Sign in to confirm you’re not a bot",
+      "playbackVerified": false
+    },
+    {
+      "id": "gdZLi9oWNZg",
+      "profile": "visionos",
+      "httpStatus": 200,
+      "ms": 1608,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "UNPLAYABLE",
+      "sourceReason": "Sign in to confirm you’re not a bot",
+      "playbackVerified": false
+    },
+    {
+      "id": "c6ASQOwKkhk",
+      "profile": "visionos-current",
+      "httpStatus": 200,
+      "ms": 322,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "LOGIN_REQUIRED",
+      "sourceReason": "Sign in to confirm you’re not a bot",
+      "playbackVerified": false
+    },
+    {
+      "id": "gdZLi9oWNZg",
+      "profile": "visionos-current",
+      "httpStatus": 200,
+      "ms": 442,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "LOGIN_REQUIRED",
+      "sourceReason": "Sign in to confirm you’re not a bot",
+      "playbackVerified": false
+    },
+    {
+      "id": "c6ASQOwKkhk",
+      "profile": "ios",
+      "httpStatus": 200,
+      "ms": 319,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "LOGIN_REQUIRED",
+      "sourceReason": "Sign in to confirm you’re not a bot",
+      "playbackVerified": false
+    },
+    {
+      "id": "gdZLi9oWNZg",
+      "profile": "ios",
+      "httpStatus": 200,
+      "ms": 336,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "LOGIN_REQUIRED",
+      "sourceReason": "Sign in to confirm you’re not a bot",
+      "playbackVerified": false
+    },
+    {
+      "id": "c6ASQOwKkhk",
+      "profile": "web-embedded",
+      "httpStatus": 200,
+      "ms": 306,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "ERROR",
+      "sourceReason": "This video is unavailable",
+      "playbackVerified": false
+    },
+    {
+      "id": "gdZLi9oWNZg",
+      "profile": "web-embedded",
+      "httpStatus": 200,
+      "ms": 288,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "ERROR",
+      "sourceReason": "This video is unavailable",
+      "playbackVerified": false
+    },
+    {
+      "id": "c6ASQOwKkhk",
+      "profile": "tv-embedded",
+      "httpStatus": 200,
+      "ms": 221,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "ERROR",
+      "sourceReason": "YouTube is no longer supported in this application or device.",
+      "playbackVerified": false
+    },
+    {
+      "id": "gdZLi9oWNZg",
+      "profile": "tv-embedded",
+      "httpStatus": 200,
+      "ms": 227,
+      "probeVersion": 2,
+      "stage": "player",
+      "sourceStatus": "ERROR",
+      "sourceReason": "YouTube is no longer supported in this application or device.",
+      "playbackVerified": false
+    }
+  ],
+  "summary": {
+    "verifiedRanges": 0,
+    "failures": 10,
+    "fullPlaybackVerified": false
+  },
+  "nodeGateway": {
+    "testedSongs": [
+      "c6ASQOwKkhk",
+      "gdZLi9oWNZg"
+    ],
+    "httpStatus": 422,
+    "error": "SOURCE_LOGIN_REQUIRED",
+    "sourceStatus": "LOGIN_REQUIRED",
+    "sourceReason": "Sign in to confirm you’re not a bot"
+  },
+  "limitations": [
+    "No audio bytes obtained",
+    "No complete song or real seeking verified",
+    "No physical iPhone or background playback verified",
+    "HTTP 200 from a diagnostic does not indicate audio playback success"
+  ]
+}

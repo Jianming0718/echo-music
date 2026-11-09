@@ -1,6 +1,10 @@
 'use strict';
 (() => {
- const rows=`正在进入听歌房…\tJoining listening room…
+ const rows=`音频暂时无法播放，请重试或选择其他版本。\tAudio is temporarily unavailable. Retry or choose another version.
+音频服务尚未连接。\tThe audio service is not connected yet.
+音频服务地址无效。\tThe audio service address is invalid.
+请再点一次播放以开始音乐。\tTap Play again to start the music.
+正在进入听歌房…\tJoining listening room…
 这间听歌房仅限受邀好友。\tThis room is only available to invited friends.
 听歌房已结束或已过期。\tThe listening room has ended or expired.
 暂时无法进入听歌房，请重试。\tCould not join the listening room. Please try again.
