@@ -225,7 +225,7 @@ body.youtube-active #now-playing #np-inline-cover{display:block;width:54px;heigh
 }
 
 .video-card>div{aspect-ratio:1}
-.toggle-play.is-buffering{position:relative}.toggle-play.is-buffering>svg{visibility:hidden}.toggle-play.is-buffering:after{content:"";position:absolute;width:18px;height:18px;left:50%;top:50%;margin:-9px 0 0 -9px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+.toggle-play.is-buffering{position:relative}.toggle-play.is-buffering>svg{visibility:hidden}.toggle-play.is-buffering:after{content:"";position:absolute;box-sizing:border-box;inset:0;width:20px;height:20px;margin:auto;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;transform-origin:center;animation:spin .8s linear infinite;pointer-events:none}
 #youtube-feedback{padding:10px 12px 12px;border-top:1px solid #ffffff12;background:#192013;color:#d0ddc3;font-size:12px;line-height:1.6}
 #youtube-feedback[hidden]{display:none}#youtube-feedback p{margin:0 0 6px}#youtube-feedback a{color:#d3ed9b;text-decoration:underline;font-size:11px}
 body.youtube-active #now-playing #np-video-slot{height:var(--video-height,229px)}

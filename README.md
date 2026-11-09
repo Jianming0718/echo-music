@@ -1,6 +1,6 @@
 # Echo
 
-Minimal, responsive music player. Version 0.18.1 keeps the YouTube Music search and playback engine with its video surface outside the visible layout, adds high-resolution responsive artwork, and supports Chinese and English in Settings. Password, avatar, Apps Script, membership, friends, and chat features from 0.5.0 are retained. Native audio still supports Audius streams, included licensed tracks, and files imported on the device. The optional Safari ad-helper script requires installing and authorizing the free Userscripts extension; actual ad skipping still needs verification on an iPhone. Settings now support light/dark themes and an opt-in animated background. Official Lucide icons, synchronized now-playing volume, artist profiles, album/single browsing, and verified release-date precision are included.
+Minimal, responsive music player. Version 0.18.2 keeps the YouTube Music search and playback engine with its video surface outside the visible layout, adds high-resolution responsive artwork, and supports Chinese and English in Settings. Password, avatar, Apps Script, membership, friends, and chat features from 0.5.0 are retained. Native audio still supports Audius streams, included licensed tracks, and files imported on the device. The optional Safari ad-helper script requires installing and authorizing the free Userscripts extension; actual ad skipping still needs verification on an iPhone. Settings now support light/dark themes and an opt-in animated background. Official Lucide icons, synchronized now-playing volume, artist profiles, album/single browsing, and verified release-date precision are included.
 
 The compact page toolbar, optional server-authorized user editor, and Safari helper 0.2.0 update are documented in [Administration and ad helper](docs/admin-and-ad-helper.md).
 
@@ -38,6 +38,6 @@ Unchanged responses preserve DOM nodes. Feed reactions update in place, comment 
 
 Square now uses a compact social timeline based on the supplied layout reference: an avatar column on the left, aligned names/text/attachments on the right, small inline music cards, photos with their proportions preserved, and bottom-aligned timestamps, audience labels and actions. Thin separators replace the enclosing post cards. More options provide copy text, existing music/photo actions and authorized deletion. Existing themes, audience rules, comments and incremental updates are retained. No backend update is required.
 
-### 0.18.1
+### 0.18.2
 
 Friends now relies on automatic updates without a manual refresh button. Joining a listening room immediately shows progress above the list and coalesces repeated clicks on the same room. Successful entry brings the room controls into view; failures show an inline message with retry. Cancelling, switching rooms, leaving the rooms tab or changing accounts rejects earlier results. Reopening the current room retains its chat draft. Invited guests still start playback explicitly with Follow. No Apps Script update is required.
