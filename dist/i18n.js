@@ -1,6 +1,12 @@
 'use strict';
 (() => {
- const rows=`动态\tPost
+ const rows=`正在进入听歌房…\tJoining listening room…
+这间听歌房仅限受邀好友。\tThis room is only available to invited friends.
+听歌房已结束或已过期。\tThe listening room has ended or expired.
+暂时无法进入听歌房，请重试。\tCould not join the listening room. Please try again.
+无法进入听歌房\tUnable to join the room
+返回房间列表\tBack to rooms
+动态\tPost
 点赞\tLike
 更多操作\tMore options
 复制文字\tCopy text
