@@ -1,6 +1,6 @@
-# Independent audio playback candidate
+# Independent audio playback prototype — not activated
 
-The `feature/audio-only` branch prepares an iframe-free native audio transport and a standalone Netlify audio gateway. **Hosted playback is not verified and the live Echo site has not been switched.** See [deployment and verification instructions](docs/audio-only-netlify.md). Netlify deploys the gateway/test page only; the existing GitHub Pages URL and account backend are preserved.
+All prototype source is in the `feature/audio-only` GitHub branch. The owner has cancelled the proposed Netlify deployment and keeps the existing GitHub Pages website. **No audio service has been deployed, hosted playback is not verified, and the live Echo site has not been switched.** GitHub Pages cannot run the server-side resolver. The native audio transport, resolver, optional hosting adapter and tests are retained for review. See [implementation status and limitations](docs/audio-only-netlify.md).
 
 # Echo
 

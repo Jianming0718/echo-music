@@ -1,4 +1,6 @@
-# Echo 独立音频播放：待真实部署验证
+# Echo 独立音频播放原型：未启用
+
+用户已取消 Netlify 部署，继续保留现有 GitHub Pages 网站。以下 Netlify 适配器和安装说明只作为可选实现参考；不再要求用户连接 Netlify，也没有对该项目做任何部署或更改。GitHub Pages 不能执行服务端解析代码，因此本分支不能仅靠上传到 Pages 就实现无广告的 YouTube 音频播放。
 
 代码在 `feature/audio-only` 分支。当前 GitHub Pages 和原生 Sites 线上版本未切换，仍是 0.17.1。请勿将本分支的代码准备状态理解为无广告播放已经上线。
 
