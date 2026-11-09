@@ -2,7 +2,7 @@ import { createResolver } from '../../services/audio-gateway/resolver.mjs';
 import { createAudioHandler } from '../../services/audio-gateway/handler.mjs';
 
 const handle = createAudioHandler({
-  resolver: createResolver(),
+  resolver: createResolver({report:entry=>console.warn(JSON.stringify({component:'echo-audio',...entry}))}),
   origins: ['https://jianming0718.github.io', process.env.URL, process.env.DEPLOY_PRIME_URL,
     ...(process.env.ECHO_AUDIO_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean)]
 });

@@ -9,7 +9,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["youtubei.js", "quickjs-emscripten"]
+  external_node_modules = ["youtubei.js", "quickjs-emscripten", "bgutils-js", "jsdom-proof"]
 
 [[headers]]
   for = "/config.js"

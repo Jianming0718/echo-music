@@ -16,7 +16,7 @@ for(const id of ['c6ASQOwKkhk','gdZLi9oWNZg']){
   const type=response.headers.get('Content-Type')||'';
   if(response.status!==206||!type.startsWith('audio/mp4')){
    const error=await response.json().catch(()=>({error:'INVALID_AUDIO_RESPONSE'}));
-   console.log(JSON.stringify({id,ok:false,status:response.status,code:error.error||'INVALID_AUDIO_RESPONSE',ms:Date.now()-start}));failures++;continue;
+   console.log(JSON.stringify({id,ok:false,status:response.status,code:error.error||'INVALID_AUDIO_RESPONSE',...(error.sourceStatus?{sourceStatus:error.sourceStatus}:{}),...(error.sourceReason?{sourceReason:error.sourceReason}:{}),ms:Date.now()-start}));failures++;continue;
   }
   const data=new Uint8Array(await response.arrayBuffer());
   const marker=new TextDecoder('latin1').decode(data.slice(0,64));

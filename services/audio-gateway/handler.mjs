@@ -25,10 +25,13 @@ export function createAudioHandler({ resolver, fetcher = fetch, origins = [], no
       headers.set('Access-Control-Allow-Origin', origin);
       headers.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
     }
-    function failure(code, status) {
+    function failure(code, status, details = {}) {
       headers.set('Content-Type', 'application/json; charset=utf-8');
       if (status === 429) headers.set('Retry-After', '60');
-      return new Response(request.method === 'HEAD' ? null : JSON.stringify({ error: code }), { status, headers });
+      const sourceStatus=typeof details.sourceStatus==='string'?details.sourceStatus.slice(0,40):null;
+      const sourceReason=typeof details.sourceReason==='string'?details.sourceReason.slice(0,240).replace(/https?:\/\/\S+/g,'[url]'):null;
+      const verificationError=typeof details.verificationError==='string'&&/^[A-Za-z0-9_]{1,80}$/.test(details.verificationError)?details.verificationError:null;
+      return new Response(request.method === 'HEAD' ? null : JSON.stringify({ error: code,...(sourceStatus?{sourceStatus}:{}),...(sourceReason?{sourceReason}:{}),...(verificationError?{verificationError}:{}) }), { status, headers });
     }
     try {
       if (origin && !allowed.has(origin)) throw new AudioError('ORIGIN_NOT_ALLOWED', 403);
@@ -45,7 +48,7 @@ export function createAudioHandler({ resolver, fetcher = fetch, origins = [], no
       if (url.pathname.endsWith('/health')) {
         headers.set('Content-Type', 'application/json');
         return new Response(request.method === 'HEAD' ? null : JSON.stringify({
-          service: 'echo-audio', version: 1, transport: 'audio-only',
+          service: 'echo-audio', version: 6, transport: 'audio-only',
           playbackVerified: false
         }), { headers });
       }
@@ -141,7 +144,7 @@ export function createAudioHandler({ resolver, fetcher = fetch, origins = [], no
       return new Response(request.method === 'HEAD' ? null : result.body, { status, headers });
     } catch (error) {
       if (error.name === 'AbortError' || error.name === 'TimeoutError') return failure('AUDIO_TIMEOUT', 504);
-      return failure(error instanceof AudioError ? error.code : 'SOURCE_UNAVAILABLE', error instanceof AudioError ? error.status : 503);
+      return failure(error instanceof AudioError ? error.code : 'SOURCE_UNAVAILABLE', error instanceof AudioError ? error.status : 503,error instanceof AudioError?error.details:{});
     }
   };
 }

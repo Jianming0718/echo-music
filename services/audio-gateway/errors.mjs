@@ -1,9 +1,10 @@
 export class AudioError extends Error {
-  constructor(code, status = 503) {
+  constructor(code, status = 503, details = {}) {
     super(code);
     this.name = 'AudioError';
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 

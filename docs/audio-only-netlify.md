@@ -1,55 +1,57 @@
-# Echo 独立音频播放原型：未启用
+# 独立音频播放器：已部署测试服务，未切换主站
 
-用户已取消 Netlify 部署，继续保留现有 GitHub Pages 网站。以下 Netlify 适配器和安装说明只作为可选实现参考；不再要求用户连接 Netlify，也没有对该项目做任何部署或更改。GitHub Pages 不能执行服务端解析代码，因此本分支不能仅靠上传到 Pages 就实现无广告的 YouTube 音频播放。
+已完成 Netlify 测试部署。当前阻碍是 YouTube 对服务器访问的验证要求，尚未取得真实可播放音频。
 
-代码在 `feature/audio-only` 分支。当前 GitHub Pages 和原生 Sites 线上版本未切换，仍是 0.17.1。请勿将本分支的代码准备状态理解为无广告播放已经上线。
+## 当前可核对状态
 
-## 已实现
+- 测试页：https://echo-audio-test--music-echo.netlify.app/
+- 健康接口：`/api/audio/health`，返回 HTTP 200、`version: 6`、`playbackVerified: false`。
+- 最新部署：`6af1eb81eec8c1d2ff0ac01d`，目标项目 `music-echo`。
+- 实测 The Astronaut 与 Dynamite 均返回 HTTP 422、`SOURCE_LOGIN_REQUIRED`、`LOGIN_REQUIRED`，原因为 `Sign in to confirm you’re not a bot`。
+- Netlify 主域名保留原生产部署，GitHub Pages 主站仍是 Echo 0.17.1；新内核未启用，PR 保持草稿。
 
-- 原创 Node 服务通过固定版本 `youtubei.js@18.3.0` 解析音乐音频，选择纯音频格式；优先 AAC/MP4 以兼容 iPhone。
-- 自建服务转发音频；不把可能绑定服务器 IP 的 Google 音频地址直接交给浏览器。只允许 Google 媒体域名和固定路径，逐跳验证重定向，禁止传入任意代理 URL。
-- 支持音频 Range、HEAD 和 CORS；缓存短期解析结果、合并相同请求，并在上游 403/410 时最多刷新一次地址。
-- 播放器直接调用 HTML audio 的 play，保留真实点击手势；不等待前端异步解析后再尝试自动播放。
-- 新传输层保留歌曲 ID、收藏、歌单、歌词、房间和本机文件协议。启用纯音频模式后不创建 iframe、不加载 YouTube iframe API，也不启动 Safari 广告脚本。
-- 音频失败会显示重试/搜索其他版本，不切回带广告的嵌入播放器。
-- 播放器签名脚本在有内存和时间上限的 QuickJS 中解释，不开放 Node 环境、网络或服务器密钥。
+源码位于 `feature/audio-only`。主站地址保持 https://jianming0718.github.io/echo-music/ 。没有迁移账号、修改 Google Sheet、发送邮件、修改会员资料或头像。服务器功能不读取账号密码、聊天、会员或用户表格。
 
-没有复制 ytify/Piped 的 GPL 应用代码；这部分是 Echo 的原创 MIT 代码，使用具有独立许可证的依赖。源码和依赖锁文件在仓库内。会员/账号系统保持现有 Google Sheets/Apps Script；此服务不读取密码、聊天、会员或用户表格。
+## 已实现的独立播放架构
 
-## 在你的 Netlify 中部署
+- 原创 Node 音频服务，固定 `youtubei.js@18.3.0`、`quickjs-emscripten@0.32.0`、`bgutils-js@4.0.3`。依赖锁文件提交到 GitHub。
+- 读取 YouTube Music 观看页的实际匿名访客资料与可识别的客户端版本。探测访客支持的 visionOS 0.1 音频接口；遇到明确验证要求时尝试匿名 WebPO 验证与音乐客户端。
+- WebPO 绑定歌曲编号，只用于对应媒体请求，不作为账号凭据。仅在 Google 返回完整挑战、完整性令牌和可用回调后使用；不伪造已通过验证的状态。
+- Google 播放器签名运算在带内存/时间上限的 QuickJS 中执行。匿名验证适配使用独立 DOM 上下文，浏览器上下文中的回调和字节数组经适配后交给库；不读取 Echo 用户会话。没有把这段 DOM 上下文声明为通用安全沙箱。
+- 验证适配单独使用 `jsdom-proof`（固定别名 `jsdom@24.1.3`），兼容当前托管环境；原界面测试继续用开发依赖 `jsdom@31.0.0`。
+- 选择原始纯音频 MP4/AAC 或 WebM；不选择视频、DRM、直播或流式片段格式。不使用已知会在读到后续音频时失败的 Android VR 自动备用路径。
+- 转发音频而非把服务器 IP 绑定的媒体地址直接交给浏览器。只允许 HTTPS Google 媒体域名与固定路径，逐跳核验重定向，拒绝任意代理 URL，不转发账号 Cookie 或 Authorization。
+- Range、HEAD、跨域、短期 URL 缓存和同请求合并；上游 403/410 时最多更新一次。失败原因只返回受限公开字段，不返回令牌、签名地址、内部堆栈或凭据。
+- 纯音频传输层同步设置 HTML audio 地址并在真实点击中调用 play，保留歌曲 ID、收藏、歌单、歌词、房间和本机文件协议。启用此模式后不创建 iframe、不加载 iframe API、不启动 Safari 跳广告脚本；失败也不回退到 iframe。
 
-当前连接没有 Netlify 部署接口，需由账号持有人完成这一步，不需要在聊天中发送任何 token 或密码。
+这些代码没有复制其他应用的 GPL 实现；协议参数参考公开资料，MIT 依赖保留自身许可证。原有 `youtube-embed` 模式仍保留用于尚未切换的现有生产站点。
 
-1. 登录你原来的 Netlify 账号，选择 **Add new project → Import an existing project → GitHub**。
-2. 选择 `Jianming0718/echo-music`，部署分支选择 **feature/audio-only**。
-3. 保留仓库 `netlify.toml` 的自动设置：Node 24、构建命令 `node scripts/check-audio-build.mjs`、发布目录 `audio-gateway-public`、函数目录 `netlify/functions`。无需额外密钥或付费服务。
-4. 部署后打开 Netlify 地址，点击测试歌曲。服务健康检查成功不等于音频可播放；要确认真实声音、进度拖动及 iPhone Safari/Chrome 表现。
-5. 将 Netlify 站点地址发回。后续会先请求真实音频字节验证，再修改现有 GitHub Pages 的公开配置并切换播放内核；保留当前网址。
+## 验证证据
 
-本次只部署独立音频服务和测试页，不迁移整个 Echo 网站，也不修改账号后端。不要开启自动付费升级；在 Netlify Billing/Usage 中确认旧套餐的 Functions 和带宽额度。旧套餐的静态站带宽不代表函数调用和音频转发无限，不能保证长期零成本。
+41 项音频相关自动化场景通过，覆盖字节转发、分段响应、来源/格式校验、取消、超时、缓存、大小上限、原生播放手势、旧歌曲 ID、快速切歌、验证回调跨 DOM 上下文的兼容性，以及公开错误信息脱敏。它们不证明真实音源可用。
 
-## 验证结果与限制
+真实 Netlify 探测始终未取得音频：两首测试歌曲在最新部署中仍要求登录确认非机器人。匿名挑战/令牌流程未解除上游拒绝，不能据此称为「已实现可用的无广告播放」。没有完整歌曲、听感、物理 iPhone 或后台锁屏的成功测试。
 
-- 新服务和前端通过 35 项本地自动化场景；现有完整回归套件另有 233 项通过。测试覆盖分段音频、来源校验、超时/取消、缓存、格式和播放器状态。这些模拟网络测试不证明商业曲目实际可播放。
-- 本次执行环境对两首真实歌曲均未获取到音频，探测返回 `503 SOURCE_UNAVAILABLE`。此前 Supabase 的独立试验也遇到 Google 403；那个已停用的试验没有重新启用。
-- Netlify 出口是否能解析和读取完整音乐尚未验证。Google 可能限制数据中心 IP、改变签名或要求额外令牌。如果部署后仍失败，应继续诊断服务或改用其他后端，不能用测试通过掩盖音源失败。
-- 不依赖未经验证的公共 Invidious/Piped 实例，不连接别人的私人后端，不使用第三方付费 RapidAPI 密钥。
-- 不绕过浏览器真实点击要求；iOS 可暂停、限制或回收后台网页。Media Session/原生音频不构成锁屏持续播放保证。
-- 这条路径不运行官方播放器的广告调度。歌曲自身音轨中的口播、赞助片段或视频作者的内容并不会自动删除。
-- 当前 Netlify 原生函数文档规定流式响应有 60 秒执行上限、20 MB 响应上限；慢网络或长音频可能触及限制。超过大小上限的已知响应会明确失败。完整歌曲和低速手机网络仍需在部署后验证，不能仅凭开头字节成功承诺完整播放。参考：https://docs.netlify.com/build/functions/api/#streaming-responses
-- 每个热函数实例有 120 请求/分钟/IP 的基本保护；不是分布式限流。上线人数增加前需补充平台限流与预算监控。
+服务健康检查只表明程序能响应。测试页可用于复现，尚不是可替代生产音乐播放器的版本。用户需要的主站切换仍待真实音频通过验证；不能以本机模拟测试替代此门槛。
 
-## 开发与切换
+## 部署与运行约束
+
+当前上传工具已通过 Netlify 官方票据登录并关联现有项目。`.netlify/` 已忽略，不提交本地关联状态。认证缓存位于仓库之外，不包含在源码或发布目录中；不要在聊天中索取 Token、Cookie 或密码。
+
+只创建独立测试部署，未更改其他项目、访问控制、付费套餐或全局运行时配置。验证适配使用兼容现有运行环境的依赖。
+
+上传时需要 `--skip-functions-cache`，否则 `--no-build` 可能复用先前生成的函数包。已通过健康接口版本核对线上实际版本。构建命令 `node scripts/check-audio-build.mjs`，函数目录 `netlify/functions`，发布目录 `audio-gateway-public`；只发布服务和测试页，不迁移整个 Echo。
+
+Netlify 原生流式函数有 60 秒执行与 20 MB 响应上限；旧套餐静态带宽不代表函数/音频转发无限。代码有每热实例每 IP 每分钟 120 请求的基本保护，不是分布式限流。不保证长期零成本，也未开启付费升级。
+
+Google 可以限制服务器来源、变更私有协议或要求有效登录/运行环境。当前部署对此要求失败。不要加入未验证的公共代理、借用他人的私密后端、索取 Google 登录 Cookie，或自动切回带广告的播放器来掩盖失败。
+
+## 本地命令
 
 ```sh
 npm ci --ignore-scripts
 npm run test:audio
-NODE_USE_ENV_PROXY=1 npm run audio:probe -- --local
-npm run audio:probe -- https://实际部署的站点地址
+npm run audio:probe -- https://echo-audio-test--music-echo.netlify.app
 ```
 
-探测会读取两首歌前 4096 个音频字节，检查 HTTP 206、AAC/MP4 类型、容器标识和 Content-Range。它不验证完整播放、听感或物理 iPhone，仍需真人播放。
-
-真实服务通过验证后，在公开构建配置中设置 `ECHO_PLAYBACK_MODE=audio-only` 和 `ECHO_AUDIO_GATEWAY_URL` 为该站点的 `/api/audio` HTTPS 地址。禁止将密钥放进此地址；它是公开媒体接口。已有账号、Google 配置、头像存储和搜索设置继续保留。GitHub Pages 仍不能运行解析函数。
-
-只运行 `npm run config` 不会自动启用纯音频；当前模式保持不变。开启纯音频却没有配置有效服务地址时构建会失败，避免发布一个不能播歌的版本。
+只有真实服务通过音频字节、完整歌曲与拖动验证后，才设置公开 `ECHO_PLAYBACK_MODE=audio-only` 和 `ECHO_AUDIO_GATEWAY_URL`。缺少有效 HTTPS 服务地址时构建会拒绝启用纯音频，防止发布不能播歌的配置。GitHub Pages 本身不运行音频解析代码。

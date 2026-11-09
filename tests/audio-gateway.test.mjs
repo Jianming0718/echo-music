@@ -125,3 +125,14 @@ test('rejects a response above the hosting streaming size limit',async()=>{
  const f=fixture({fetcher:async()=>stream('music',200,{'Content-Length':String(21*1024*1024)})});
  const response=await f.request();assert.equal(response.status,413);assert.deepEqual(await response.json(),{error:'AUDIO_RESPONSE_TOO_LARGE'});
 });
+
+test('returns bounded public source reasons while excluding credentials and internal details',async()=>{
+ const f=fixture({resolve:async()=>{throw new AudioError('SOURCE_VERIFICATION_REQUIRED',503,{
+  sourceStatus:'LOGIN_REQUIRED',sourceReason:'Open https://example.test/private to verify',
+  verificationError:'SOURCE_PROOF_CHALLENGE_FAILED',token:'private-token',stack:'private-stack'
+ })}});
+ const response=await f.request(),body=await response.json();
+ assert.equal(response.status,503);assert.equal(body.sourceStatus,'LOGIN_REQUIRED');
+ assert.equal(body.sourceReason,'Open [url] to verify');assert.equal(body.verificationError,'SOURCE_PROOF_CHALLENGE_FAILED');
+ assert(!JSON.stringify(body).includes('private-token'));assert(!JSON.stringify(body).includes('private-stack'));
+});

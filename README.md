@@ -1,6 +1,6 @@
-# Independent audio playback prototype — not activated
+# Independent audio playback — test deployment only
 
-All prototype source is in the `feature/audio-only` GitHub branch. The owner has cancelled the proposed Netlify deployment and keeps the existing GitHub Pages website. **No audio service has been deployed, hosted playback is not verified, and the live Echo site has not been switched.** GitHub Pages cannot run the server-side resolver. The native audio transport, resolver, optional hosting adapter and tests are retained for review. See [implementation status and limitations](docs/audio-only-netlify.md).
+The audio-only candidate is deployed at [the Netlify test site](https://echo-audio-test--music-echo.netlify.app/). **Real-song playback remains blocked by YouTube’s “Sign in to confirm you’re not a bot” response, including after anonymous attestation. The existing Echo production player has not been switched.** All source remains in the `feature/audio-only` GitHub branch. See [deployment evidence and limitations](docs/audio-only-netlify.md).
 
 # Echo
 
