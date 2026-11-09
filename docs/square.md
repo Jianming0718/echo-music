@@ -2,6 +2,12 @@
 
 Square is reached from both the sidebar and the mobile navigation. It accepts everyday text, a single photo, and an optional currently-playing song. Publishing does not start or interrupt playback. There is no requirement to attach music.
 
+## Compact composer and comments
+
+The plus button opens an inline composer; it starts collapsed so browsing posts uses the available screen. Closing it preserves the current text, audience, photo and music attachment in memory. Publishing locks the toggle until the response finishes; failure leaves the draft open for retry, while success clears and closes it and announces Published. The button exposes its expanded state and labels in English and Chinese and moves keyboard focus to the text field or back to the toggle.
+
+Expanded post comments use a compact, theme-aware background with inline author, colon and escaped body text. Times remain available to assistive technology. Existing comment visibility, pagination, delete permissions, polling, draft focus and caret preservation are unchanged; no new background requests or backend rollout is required. Timed song comments and room chat keep their layouts.
+
 ## Audience and browsing
 
 Every new post defaults to Friends only. The composer allows All users explicitly; this audience covers active signed-in accounts. Old posts with no audience value continue to use Friends only. Square lists public posts plus the viewer’s own/friends-only posts; Friends filters authors to the current friend group, and Mine filters to the current user. Guests and inactive accounts cannot read the feed. Friend-only access is checked again for likes, comments, pagination and every API request. Public posts permit interactions from other active accounts. Removing a friend does not hide a post that its author deliberately published to All users.
