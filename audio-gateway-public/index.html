@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Echo · 音频验证</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#10130e;color:#edf3e7;font:16px/1.6 system-ui,sans-serif;padding:24px}main{max-width:480px;width:100%}h1{font-size:42px;letter-spacing:-2px;margin:0 0 28px}h1 span{color:#d3ed9b}h2{font-size:22px;margin:0 0 12px}p{color:#bec8b5}button{display:block;width:100%;border:1px solid #424c38;background:#1e2619;color:inherit;border-radius:14px;text-align:left;padding:16px 18px;font:inherit;cursor:pointer;margin:12px 0;min-height:56px}button:focus-visible{outline:2px solid #d3ed9b;outline-offset:4px}button small{display:block;color:#bec8b5}audio{width:100%;margin:24px 0 8px}#status{min-height:52px}#status[data-state="error"]{color:#ffa5a5}footer{font-size:13px;color:#bec8b5;margin-top:32px}@media(prefers-color-scheme:light){body{background:#f5f7f1;color:#182112}h1 span{color:#4b6c17}p,button small,footer{color:#505f43}button{background:#fff;border-color:#b9c6ac}#status[data-state="error"]{color:#a42424}}
+</style>
+</head>
+<body>
+<main>
+<h1>echo<span>.</span></h1>
+<h2>音频播放验证</h2>
+<p>选一首歌曲，确认能听到音乐，并尝试拖动进度。此页面使用纯音频播放器。</p>
+<button type="button" data-video="c6ASQOwKkhk">The Astronaut<small>Jin</small></button>
+<button type="button" data-video="gdZLi9oWNZg">Dynamite<small>BTS</small></button>
+<audio id="audio" controls playsinline preload="none"></audio>
+<p id="status" role="status" aria-live="polite">正在检查服务连接…</p>
+<footer>服务连接成功与歌曲播放成功会分别显示。验证完成后，可将此页面地址发回以继续接入 Echo。</footer>
+</main>
+<script>
+'use strict';
+const audio=document.querySelector('#audio'),status=document.querySelector('#status');
+let selected=false;
+function show(text,error=false){status.textContent=text;status.dataset.state=error?'error':'normal'}
+fetch('/api/audio/health',{cache:'no-store'}).then(async response=>{if(!response.ok)throw Error();const result=await response.json();if(result.service!=='echo-audio')throw Error();if(!selected)show('服务已连接。请选择歌曲验证实际播放。')}).catch(()=>{if(!selected)show('暂时无法连接音频服务。',true)});
+for(const button of document.querySelectorAll('[data-video]'))button.addEventListener('click',()=>{
+ selected=true;audio.pause();audio.src='/api/audio?v='+encodeURIComponent(button.dataset.video)+'&format='+(audio.canPlayType('audio/mp4')?'mp4':'webm');
+ show('正在加载音乐…');audio.play().catch(error=>{if(error.name!=='AbortError')show(error.name==='NotAllowedError'?'请点播放器中的播放按钮。':'暂时无法取得音频，请保留此页面地址以便检查。',true)});
+});
+audio.addEventListener('playing',()=>show('音乐正在播放。请再试试拖动进度和锁屏后的播放。'));
+audio.addEventListener('waiting',()=>show('正在缓冲音乐…'));
+audio.addEventListener('error',()=>show('暂时无法取得音频。服务所在网络可能无法访问音乐来源。',true));
+audio.addEventListener('ended',()=>show('此歌曲已播放结束。'));
+</script>
+</body>
+</html>

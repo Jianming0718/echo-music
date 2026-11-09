@@ -9,10 +9,15 @@
     "vendor": "node scripts/vendor.mjs",
     "test": "node tests/player-core.test.cjs && node tests/database.test.cjs && node tests/messages.test.cjs && node tests/account-security.test.cjs && node tests/cutover-guard.test.cjs && node tests/admin-users.test.mjs && node tests/admin-ui.test.cjs && node tests/member-redemption-ui.test.cjs && node tests/admin-bridge.test.mjs && node tests/email-branding.test.cjs && node tests/apps-script.test.cjs && node tests/sheets-backend.test.cjs && node tests/member-redemption-backend.test.cjs && node tests/sheets-client.test.cjs && node tests/avatar-storage.test.mjs && node tests/search.test.mjs && node tests/video-playback.test.cjs && node tests/ui.test.cjs && node tests/social.test.cjs && node tests/community-backend.test.cjs && node tests/square-backend.test.cjs && node tests/community-ui.test.cjs && node tests/room-entry.test.cjs && node tests/square-ui.test.cjs && node tests/account.test.cjs && node tests/operation-feedback.test.cjs && node tests/presentation.test.cjs && node tests/ad-helper.test.cjs && node tests/artist-parser.test.mjs && node tests/music-profile-endpoint.test.cjs && node tests/appearance-artist.test.cjs && node tests/contrast-membership.test.cjs && node tests/interface-performance.test.cjs && node tests/live-data.test.cjs && node tests/live-ui.test.cjs && node tests/cache.test.cjs",
     "apps-script:build": "node scripts/vendor-password.mjs && node scripts/package-apps-script.mjs",
-    "emails:build": "node scripts/email-templates.mjs"
+    "emails:build": "node scripts/email-templates.mjs",
+    "test:audio": "node --test tests/audio-gateway.test.mjs tests/audio-resolver.test.mjs tests/audio-build.test.mjs && node tests/audio-only-playback.test.cjs",
+    "audio:probe": "node scripts/probe-audio.mjs",
+    "build:netlify": "node scripts/write-config.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.119.0"
+    "@supabase/supabase-js": "2.119.0",
+    "youtubei.js": "18.3.0",
+    "quickjs-emscripten": "0.32.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.15",

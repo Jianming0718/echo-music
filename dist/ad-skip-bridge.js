@@ -1,4 +1,5 @@
 'use strict';
+if(globalThis.ECHO_CONFIG?.playbackMode!=='audio-only'){
 (() => {
  const origins=new Set(['https://www.youtube.com','https://www.youtube-nocookie.com']),channel='echo-ad-helper';
  let enabled=true,peer=null,challenge=crypto.randomUUID(),observed=null,binding=null,gate=null,serial=0;
@@ -27,3 +28,4 @@
  setInterval(probe,3000);window.addEventListener('pagehide',release);
  globalThis.EchoAdHelper=Object.freeze({setEnabled,update,prepare,cancel:release,bind(value){release();binding=value;probe()},get enabled(){return enabled},get status(){return status()}});
 })();
+}
