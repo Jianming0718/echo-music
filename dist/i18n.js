@@ -1,6 +1,14 @@
 'use strict';
 (() => {
- const rows=`音乐署名\tMusic credits
+ const rows=`动态\tPost
+点赞\tLike
+更多操作\tMore options
+复制文字\tCopy text
+动态文字\tPost text
+文字已复制\tText copied
+查看照片\tView photo
+删除动态\tDelete post
+音乐署名\tMusic credits
 内置曲目 Sanctuary、Hiraeth、Childhood、Moonlight 由\tIncluded tracks Sanctuary, Hiraeth, Childhood and Moonlight by
 提供，采用\tare licensed under
 授权，音频重新编码为 128 kbps。\twith audio re-encoded at 128 kbps.
