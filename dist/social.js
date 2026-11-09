@@ -43,7 +43,7 @@ async function refreshChat(older=false){
   if(error.message.includes('好友关系')){context.items=[];renderChatMessages(context);$('#chat-form').hidden=true}
  }finally{
   context.loading=false;if(button?.isConnected)button.disabled=false;
-  if(chatContext===context){clearTimeout(context.timer);context.timer=setTimeout(()=>refreshChat(),12000)}
+  if(chatContext===context){clearTimeout(context.timer);context.timer=setTimeout(()=>refreshChat(),4000)}
  }
 }
 function openChat(person){
