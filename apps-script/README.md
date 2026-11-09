@@ -103,3 +103,13 @@ Rollback requires a deliberate frontend/backend coordination and restoration of 
 ## Branded email bodies
 
 The live EmailTemplates rows use the complete HTML from the repository’s `emails` directory. Header images are the original theme wordmarks hosted on public GitHub Pages. The footer displays admin@echomusic.com and links to mailto:admin.echomusic@gmail.com; Reply-To uses the Gmail address. Subjects and enabled flags are preserved when updating template bodies. These live sheet edits apply immediately; no Apps Script deployment or real test email is required for a branding update.
+
+## Square upgrade (version 6)
+
+Keep the current project, `Config.gs`, script properties and existing `/exec` URL. Download the updated setup ZIP, replace **only `Code.gs`**, select **`upgradeEchoSquare`** in the function dropdown and run it once. Then use **Deploy → Manage deployments → Edit → New version → Deploy** on the existing Web app. Refresh Echo afterwards.
+
+This focused installer appends `visibility`, `image_path` and `image_digest` headers to the existing `Posts` sheet. It does not rewrite post rows, touch account/password data, migrate users, change administrator roles or send email. Blank visibility on older records is always treated as friends-only. It is safe to run again. New installations may still use `installEchoSheets`.
+
+Version 6 advertises `square` and `post_images` capabilities. `social.post` accepts `visibility` (`friends` by default, or `public`) and an optional re-encoded JPEG as `image`. `social.feed` accepts `scope` (`all`, `friends`, `mine`). All operations require an active authenticated account, including reads and interactions with public posts. Public here never means anonymous access.
+
+Images use the existing private server-only image gateway and bucket; no new Supabase project, key, paid resource or Edge deployment is needed. The gateway validates JPEG signatures and a 1 MiB limit. The script chooses owner-scoped random paths, signs only images from authorized feed results, and deletes a post’s photo before deleting its Sheet record. A failed Sheet write attempts to remove its newly uploaded image. One image per post; client resizing preserves proportions up to 1280px. Image bytes and signed URLs are not stored in Sheets. Photos are removed during account image purge. Existing signed links can remain usable for up to one hour after friendship removal; deletion of the object invalidates its links.

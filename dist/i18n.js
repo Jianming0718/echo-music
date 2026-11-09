@@ -1,6 +1,39 @@
 'use strict';
 (() => {
- const rows=`账号暂停\tAccount suspended
+ const rows=`音乐署名\tMusic credits
+内置曲目 Sanctuary、Hiraeth、Childhood、Moonlight 由\tIncluded tracks Sanctuary, Hiraeth, Childhood and Moonlight by
+提供，采用\tare licensed under
+授权，音频重新编码为 128 kbps。\twith audio re-encoded at 128 kbps.
+社交服务需要更新至版本 6，请联系管理员。\tThe social service needs version 6. Please contact the administrator.
+动态可在发布时选择「仅好友可见」或「所有用户可见」。所有用户指已登录且状态正常的账号；旧动态保持好友可见。点赞和评论遵循动态的可见范围。移除好友会撤销好友专属内容的接口访问。\tChoose Friends only or All users when publishing a post. All users means signed-in accounts in good standing. Existing posts remain friends-only. Likes and comments follow the post’s audience. Removing a friend revokes API access to friends-only content.
+动态照片在浏览器中按原比例缩小并重新编码为 JPEG，保存在私有图片存储；只有能读取该动态的账号才会取得临时图片链接。临时链接最长有效一小时，已取得的链接不会因移除好友立即失效；删除动态会删除图片。原始照片和定位信息不会写入 Google Sheet。\tPost photos are resized with their proportions preserved and re-encoded as JPEG in your browser, then stored privately. Only accounts allowed to read a post can obtain a temporary photo link. Links last up to one hour; previously issued links do not expire immediately when a friendship ends. Deleting a post deletes its photo. Original photos and location metadata are not written to Google Sheets.
+弹幕仍仅好友可见；听歌房只对房主和受邀好友开放。关闭设置只会停止本机入口和刷新，不会删除已发布内容。你可以删除自己的动态、评论和弹幕，动态作者也可删除其动态下的评论。听歌房 24 小时后过期，结束房间会清除房间聊天。社交文字和图片路径保存在私有 Google Sheet，运营者可访问；未使用端到端加密。草稿只保存在页面内存中。\tTimed song comments remain friends-only. Listening rooms are limited to their host and invited friends. Disabling a feature stops local entrances and refreshes without deleting published content. You can delete your own posts, comments and timed comments; post authors can also remove comments on their posts. Rooms expire after 24 hours, and ending a room clears its chat. Social text and photo paths are stored in the operator’s private Google Sheet and are accessible to the operator, without end-to-end encryption. Drafts stay in page memory.
+广场\tSquare
+生活里的每一刻\tEveryday moments
+登录后逛广场\tSign in to explore
+分享日常、发现新朋友，也可以只与好友分享。\tShare everyday moments, meet people, or share just with friends.
+谁可以看到\tAudience
+仅好友可见\tFriends only
+所有用户可见\tAll users
+分享你的日常\tShare a moment
+照片\tPhoto
+音乐\tMusic
+我的\tMine
+动态范围\tFeed scope
+这里还没有动态。分享你的第一段日常吧。\tNo posts yet. Share your first moment.
+正在处理照片…\tPreparing photo…
+无法读取照片。\tCould not read the photo.
+待发布的照片\tPhoto to publish
+移除照片\tRemove photo
+动态照片\tPost photo
+照片暂不可用，请刷新重试。\tPhoto unavailable. Refresh to try again.
+照片正在处理中，请稍候。\tYour photo is still being prepared.
+写点什么，或添加一张照片。\tWrite something or add a photo.
+正在发布…\tPublishing…
+发布中\tPublishing
+已发布\tPublished
+公开动态与照片需要管理员更新账号服务；现在仍可发布好友可见的文字。\tPublic posts and photos need an account-service update. Friends-only text posts are available.
+账号暂停\tAccount suspended
 正在更新兑换码…\tUpdating code…
 兑换码已更新\tCode updated
 兑换码已启用。\tThe code is enabled.

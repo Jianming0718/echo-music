@@ -34,7 +34,12 @@ function echoSocialLimit_(table,uid,max) {
  if(table.rows.filter(row=>row.user_id===uid).length>=max)echoFailure_('SOCIAL_LIMIT');
  echoThrottle_('social-write:'+uid,45,60000);
 }
-function echoDeletePost_(cache,id) {
+function echoPostVisibility_(post){return post.visibility==='public'?'public':'friends'}
+function echoPostAccess_(post,uid,audience,activeUsers){return activeUsers.has(post.user_id)&&(echoPostVisibility_(post)==='public'||audience.has(post.user_id))}
+function echoPostRow_(row){const copy=echoPublicRow_(row);copy.visibility=echoPostVisibility_(row);delete copy.image_digest;return copy}
+function echoDeletePost_(cache,id){
+ const post=echoTable_('Posts',cache).rows.find(row=>row.id===id);
+ if(post?.image_path)echoAvatarCall_({action:'remove',path:post.image_path});
  echoTable_('PostComments',cache).remove(row=>row.post_id===id);
  echoTable_('PostReactions',cache).remove(row=>row.post_id===id);
  echoTable_('Posts',cache).remove(row=>row.id===id);
@@ -52,30 +57,37 @@ function echoRoomPublic_(cache,room) {
  return copy;
 }
 function echoCommunityAction_(body,user,cache) {
- const uid=user.user_id,action=body.action,audience=echoSocialAudience_(cache,user);
+ const uid=user.user_id,action=body.action,audience=echoSocialAudience_(cache,user),activeUsers=new Set(echoTable_('Users',cache).rows.filter(row=>row.account_status==='active').map(row=>row.user_id));
  if(action==='social.status') {
   echoFields_(body,[]);
   for(const name of ['Posts','PostComments','PostReactions','Danmaku','Rooms','RoomMessages'])echoTable_(name,cache);
-  return {capabilities:['feed','danmaku','rooms'],server_time:echoTime_()};
+  return {capabilities:['feed','square','post_images','danmaku','rooms'],server_time:echoTime_()};
  }
- if(action==='social.feed') {
-  echoFields_(body,['cursor']);
-  const page=echoSocialPage_(echoTable_('Posts',cache).rows.filter(row=>audience.has(row.user_id)),body.cursor,20);
+ if(action==='social.feed'){
+  echoFields_(body,['cursor','scope']);const scope=body.scope||'all';if(!['all','friends','mine'].includes(scope))echoFailure_('INVALID_REQUEST');
+  const page=echoSocialPage_(echoTable_('Posts',cache).rows.filter(row=>echoPostAccess_(row,uid,audience,activeUsers)&&(scope==='mine'?row.user_id===uid:scope==='friends'?audience.has(row.user_id):true)),body.cursor,20);
   const reactions=echoTable_('PostReactions',cache).rows,comments=echoTable_('PostComments',cache).rows;
-  return {posts:page.items.map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id),likes:reactions.filter(item=>item.post_id===row.id&&audience.has(item.user_id)).length,liked:reactions.some(item=>item.post_id===row.id&&item.user_id===uid),comments:comments.filter(item=>item.post_id===row.id&&audience.has(item.user_id)).length})),hasMore:page.hasMore};
+  const paths=[...new Set(page.items.map(row=>row.image_path).filter(Boolean))];let urls=[];
+  if(paths.length)urls=echoAvatarCall_({action:'sign',paths}).urls||[];
+  return {posts:page.items.map(row=>{const participants=echoPostVisibility_(row)==='public'?activeUsers:audience;return {...echoPostRow_(row),image_url:urls.find(image=>image.path===row.image_path)?.signedUrl||null,person:echoSocialPerson_(cache,row.user_id),likes:reactions.filter(item=>item.post_id===row.id&&participants.has(item.user_id)).length,liked:reactions.some(item=>item.post_id===row.id&&item.user_id===uid),comments:comments.filter(item=>item.post_id===row.id&&participants.has(item.user_id)).length}}),hasMore:page.hasMore};
  }
- if(action==='social.post') {
-  echoFields_(body,['id','body','track']);
-  const text=echoSocialText_(body.body,1000,true),track=body.track?echoSocialTrack_(body.track):null;
-  if(!text&&!track)echoFailure_('INVALID_SOCIAL_CONTENT');
-  const table=echoTable_('Posts',cache),existing=echoSocialExisting_(table,body.id,uid,{body:text,track});
-  if(existing)return {post:echoPublicRow_(existing)};
-  echoSocialLimit_(table,uid,200);
-  return {post:echoPublicRow_(table.put({id:body.id,user_id:uid,body:text,track,created_at:echoTime_()}))};
+ if(action==='social.post'){
+  echoFields_(body,['id','body','track','visibility','image']);
+  const text=echoSocialText_(body.body,1000,true),track=body.track?echoSocialTrack_(body.track):null,visibility=body.visibility??'friends',image=body.image??null;
+  if(!['public','friends'].includes(visibility))echoFailure_('INVALID_REQUEST');
+  if(image!==null&&(typeof image!=='string'||image.length>1400000||!/^[A-Za-z0-9+/]+={0,2}$/.test(image)))echoFailure_('INVALID_POST_IMAGE');
+  if(!text&&!track&&!image)echoFailure_('INVALID_SOCIAL_CONTENT');
+  if(!echoId_(body.id))echoFailure_('INVALID_REQUEST');
+  const table=echoTable_('Posts',cache),digest=image?echoDigest_(image):'',existing=table.rows.find(row=>row.id===body.id);
+  if(existing){if(existing.user_id!==uid||existing.body!==text||JSON.stringify(existing.track)!==JSON.stringify(track)||echoPostVisibility_(existing)!==visibility||(existing.image_digest||'')!==digest)echoFailure_('CONTENT_CONFLICT');return {post:echoPostRow_(existing)}}
+  echoSocialLimit_(table,uid,200);let path='';
+  if(image){path=uid+'/'+Utilities.getUuid()+'.jpg';echoAvatarCall_({action:'upload',path,image})}
+  try{return {post:echoPostRow_(table.put({id:body.id,user_id:uid,body:text,track,created_at:echoTime_(),visibility,image_path:path,image_digest:digest}))}}
+  catch(error){if(path)try{echoAvatarCall_({action:'remove',path})}catch{}throw error}
  }
  if(['social.delete','social.react','social.comments','social.comment','social.comment.delete'].includes(action)) {
   const post=echoTable_('Posts',cache).rows.find(row=>row.id===body.post_id);
-  if(!post||(!audience.has(post.user_id)&&!(user.role==='admin'&&action==='social.delete')))echoFailure_('FORBIDDEN');
+  if(!post||(!echoPostAccess_(post,uid,audience,activeUsers)&&!(user.role==='admin'&&action==='social.delete')))echoFailure_('FORBIDDEN');
   if(action==='social.delete') {
    echoFields_(body,['post_id']);if(post.user_id!==uid&&user.role!=='admin')echoFailure_('FORBIDDEN');echoDeletePost_(cache,post.id);return {};
   }
@@ -88,7 +100,7 @@ function echoCommunityAction_(body,user,cache) {
   }
   const table=echoTable_('PostComments',cache);
   if(action==='social.comments') {
-   echoFields_(body,['post_id','cursor']);const page=echoSocialPage_(table.rows.filter(row=>row.post_id===post.id&&audience.has(row.user_id)),body.cursor,30);
+   echoFields_(body,['post_id','cursor']);const page=echoSocialPage_(table.rows.filter(row=>row.post_id===post.id&&(echoPostVisibility_(post)==='public'?activeUsers:audience).has(row.user_id)),body.cursor,30);
    return {comments:page.items.map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id)})),hasMore:page.hasMore};
   }
   if(action==='social.comment.delete') {

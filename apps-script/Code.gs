@@ -1840,7 +1840,7 @@ const ECHO_TABLES={
  Playlists:['id','user_id','name','cover','visibility','created_at','items','updated_at'],
  Friendships:['id','requester_id','addressee_id','status','created_at'],
  Messages:['id','sender_id','recipient_id','body','track','created_at'],
- Posts:['id','user_id','body','track','created_at'],
+ Posts:['id','user_id','body','track','created_at','visibility','image_path','image_digest'],
  PostComments:['id','post_id','user_id','body','created_at'],
  PostReactions:['id','post_id','user_id','created_at'],
  Danmaku:['id','track_id','user_id','body','position','created_at'],
@@ -1867,9 +1867,9 @@ function installEchoSheets(){
  for(const [name,headers]of Object.entries(ECHO_TABLES)){let sheet=book.getSheetByName(name);if(!sheet)sheet=book.insertSheet(name);const existing=sheet.getLastRow()?sheet.getRange(1,1,1,headers.length).getValues()[0]:[];if(existing.some((value,i)=>value&&value!==headers[i]))throw Error('Unexpected headers in '+name);sheet.getRange(1,1,1,headers.length).setValues([headers]);sheet.setFrozenRows(1)}
  if(!p.getProperty('ECHO_PASSWORD_PEPPER'))p.setProperty('ECHO_PASSWORD_PEPPER',Utilities.getUuid()+Utilities.getUuid()+Utilities.getUuid());
  if(!p.getProperty('ECHO_DATA_MODE'))p.setProperty('ECHO_DATA_MODE','staged');
- if(!p.getProperty('ECHO_DUMMY_HASH'))echoDummyHash_();p.setProperty('ECHO_SHEETS_VERSION','5');try{echoAvatarCall_({action:'sign',paths:[]});p.setProperty('ECHO_AVATAR_READY','true')}catch{p.setProperty('ECHO_AVATAR_READY','false');throw Error('Avatar connection failed. Check that ECHO_ADMIN_HOOK_KEY matches the existing Supabase secret; do not share the key in chat.')}
+ if(!p.getProperty('ECHO_DUMMY_HASH'))echoDummyHash_();p.setProperty('ECHO_SHEETS_VERSION','6');try{echoAvatarCall_({action:'sign',paths:[]});p.setProperty('ECHO_AVATAR_READY','true')}catch{p.setProperty('ECHO_AVATAR_READY','false');throw Error('Avatar connection failed. Check that ECHO_ADMIN_HOOK_KEY matches the existing Supabase secret; do not share the key in chat.')}
 }
-function echoSheetsHealth_(){const p=PropertiesService.getScriptProperties();let schemaReady=false;try{const cache={};for(const name of Object.keys(ECHO_TABLES))echoTable_(name,cache);schemaReady=true}catch{}return{version:'5',schemaReady,passwordReady:Boolean(p.getProperty('ECHO_PASSWORD_PEPPER')),avatarReady:p.getProperty('ECHO_AVATAR_READY')==='true',mode:p.getProperty('ECHO_DATA_MODE')||'staged',capabilities:['sheet_data','password_auth','avatar_storage',...(schemaReady?['feed','danmaku','rooms','member_admin','redemption']:[])]}}
+function echoSheetsHealth_(){const p=PropertiesService.getScriptProperties();let schemaReady=false;try{const cache={};for(const name of Object.keys(ECHO_TABLES))echoTable_(name,cache);schemaReady=true}catch{}return{version:'6',schemaReady,passwordReady:Boolean(p.getProperty('ECHO_PASSWORD_PEPPER')),avatarReady:p.getProperty('ECHO_AVATAR_READY')==='true',mode:p.getProperty('ECHO_DATA_MODE')||'staged',capabilities:['sheet_data','password_auth','avatar_storage',...(schemaReady?['feed','square','post_images','danmaku','rooms','member_admin','redemption']:[])]}}
 function activateEchoSheets(){const health=echoSheetsHealth_();if(!health.schemaReady||!health.passwordReady||!health.avatarReady)throw Error('Run installEchoSheets and import migration data first');const cache={},users=echoTable_('Users',cache).rows,auth=echoTable_('Auth',cache).rows;if(!users.length||users.some(user=>!auth.some(row=>row.user_id===user.user_id&&String(row.email).toLowerCase()===String(user.email).toLowerCase()))||!users.some(user=>user.role==='admin'))throw Error('Migration users or administrator missing');PropertiesService.getScriptProperties().setProperty('ECHO_DATA_MODE','sheets')}
 function echoProfile_(row){return{id:row.user_id,handle:row.handle,display_name:row.display_name,avatar_path:row.avatar_path||null,created_at:row.created_at}}
 function echoAccount_(row){const expiry=row.premium_until?new Date(row.premium_until).toISOString():null;return{user_id:row.user_id,account_status:row.account_status,tier:row.tier==='premium'&&(!expiry||Date.parse(expiry)>Date.now())?'premium':'free',premium_until:expiry}}
@@ -1904,7 +1904,16 @@ function echoDataAction_(body,cache){
 function echoUpdateName_(body,user,users){if(typeof body.handle!=='string'||!/^[a-z0-9_]{3,24}$/.test(body.handle)||typeof body.display_name!=='string'||!body.display_name.trim()||body.display_name.length>40)echoFailure_('INVALID_PROFILE');if(users.rows.some(row=>row.user_id!==user.user_id&&row.handle===body.handle))echoFailure_('HANDLE_TAKEN');user.handle=body.handle;user.display_name=body.display_name.trim()}
 function echoPlaylist_(row){const copy=echoPublicRow_(row);copy.playlist_items=(row.items||[]).map((track,position)=>({playlist_id:row.id,track_id:track.id,track,position}));delete copy.items;return copy}
 function echoMessageOrder_(a,b){const stamp=value=>new Date(value).toISOString().slice(0,19)+'.'+(String(value).match(/\.(\d+)/)?.[1]||'').padEnd(6,'0').slice(0,6);return stamp(a.created_at).localeCompare(stamp(b.created_at))||String(a.id).localeCompare(String(b.id))}
-function echoSheetsPost_(body){const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(PropertiesService.getScriptProperties().getProperty('ECHO_DATA_MODE')!=='sheets')echoFailure_('MIGRATION_NOT_ACTIVE');const cache={};return{ok:true,version:'5',...(body.action.startsWith('auth.')?echoAuthAction_(body,cache):echoDataAction_(body,cache))}}catch(error){const allowed=['UNAUTHORIZED','INVALID_REQUEST','INVALID_EMAIL','INVALID_PASSWORD','INVALID_CREDENTIALS','EMAIL_NOT_VERIFIED','RESET_REQUIRED','TOKEN_INVALID','RATE_LIMITED','ACCOUNT_INACTIVE','MIGRATION_NOT_ACTIVE','SCHEMA_NOT_READY','FORBIDDEN','INVALID_PROFILE','HANDLE_TAKEN','FRIENDS_REQUIRED','FRIENDSHIP_EXISTS','INVALID_USER','INVALID_QUERY','INVALID_PLAYLIST','INVALID_MESSAGE','INVALID_CURSOR','MESSAGE_CONFLICT','INVALID_TRACK','INVALID_AVATAR','AVATAR_STORAGE_UNAVAILABLE','VALUE_TOO_LARGE','ADMIN_REQUIRED','USER_NOT_FOUND','CURRENT_PASSWORD_REQUIRED','EMAIL_LIMIT','INVALID_SOCIAL_CONTENT','CONTENT_CONFLICT','SOCIAL_LIMIT','ROOM_UNAVAILABLE','ROOM_STALE','EMAIL_TAKEN','LAST_ADMIN','USER_CHANGED','INVALID_MEMBERSHIP','INVALID_CODE','INVALID_CODE_SETTINGS','CODE_UNAVAILABLE','MEMBERSHIP_NO_EXPIRY','REDEMPTION_CHANGED'];return{ok:false,error:allowed.includes(error.message)?error.message:'SERVICE_UNAVAILABLE'}}finally{lock.releaseLock()}}
+function echoSheetsPost_(body){const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(PropertiesService.getScriptProperties().getProperty('ECHO_DATA_MODE')!=='sheets')echoFailure_('MIGRATION_NOT_ACTIVE');const cache={};return{ok:true,version:'6',...(body.action.startsWith('auth.')?echoAuthAction_(body,cache):echoDataAction_(body,cache))}}catch(error){const allowed=['UNAUTHORIZED','INVALID_REQUEST','INVALID_EMAIL','INVALID_PASSWORD','INVALID_CREDENTIALS','EMAIL_NOT_VERIFIED','RESET_REQUIRED','TOKEN_INVALID','RATE_LIMITED','ACCOUNT_INACTIVE','MIGRATION_NOT_ACTIVE','SCHEMA_NOT_READY','FORBIDDEN','INVALID_PROFILE','HANDLE_TAKEN','FRIENDS_REQUIRED','FRIENDSHIP_EXISTS','INVALID_USER','INVALID_QUERY','INVALID_PLAYLIST','INVALID_MESSAGE','INVALID_CURSOR','MESSAGE_CONFLICT','INVALID_TRACK','INVALID_AVATAR','AVATAR_STORAGE_UNAVAILABLE','VALUE_TOO_LARGE','ADMIN_REQUIRED','USER_NOT_FOUND','CURRENT_PASSWORD_REQUIRED','EMAIL_LIMIT','INVALID_SOCIAL_CONTENT','INVALID_POST_IMAGE','CONTENT_CONFLICT','SOCIAL_LIMIT','ROOM_UNAVAILABLE','ROOM_STALE','EMAIL_TAKEN','LAST_ADMIN','USER_CHANGED','INVALID_MEMBERSHIP','INVALID_CODE','INVALID_CODE_SETTINGS','CODE_UNAVAILABLE','MEMBERSHIP_NO_EXPIRY','REDEMPTION_CHANGED'];return{ok:false,error:allowed.includes(error.message)?error.message:'SERVICE_UNAVAILABLE'}}finally{lock.releaseLock()}}
+
+function upgradeEchoSquare(){
+ const sheet=echoBook_().getSheetByName('Posts');if(!sheet)throw Error('Posts sheet is missing. Run installEchoSheets first.');
+ const headers=ECHO_TABLES.Posts,existing=sheet.getRange(1,1,1,headers.length).getValues()[0];
+ if(existing.some((value,i)=>value&&value!==headers[i]))throw Error('Unexpected headers in Posts. No data was changed.');
+ sheet.getRange(1,1,1,headers.length).setValues([headers]);sheet.setFrozenRows(1);
+ PropertiesService.getScriptProperties().setProperty('ECHO_SHEETS_VERSION','6');
+ console.log('Square ready. Existing posts retain friends-only visibility. Publish a new version of the existing Web app.');
+}
 
 function echoDigest_(text){return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(text),Utilities.Charset.UTF_8)).replace(/=+$/,'')}
 function echoRandom_(){return Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,'')}
@@ -2003,7 +2012,12 @@ function echoSocialLimit_(table,uid,max) {
  if(table.rows.filter(row=>row.user_id===uid).length>=max)echoFailure_('SOCIAL_LIMIT');
  echoThrottle_('social-write:'+uid,45,60000);
 }
-function echoDeletePost_(cache,id) {
+function echoPostVisibility_(post){return post.visibility==='public'?'public':'friends'}
+function echoPostAccess_(post,uid,audience,activeUsers){return activeUsers.has(post.user_id)&&(echoPostVisibility_(post)==='public'||audience.has(post.user_id))}
+function echoPostRow_(row){const copy=echoPublicRow_(row);copy.visibility=echoPostVisibility_(row);delete copy.image_digest;return copy}
+function echoDeletePost_(cache,id){
+ const post=echoTable_('Posts',cache).rows.find(row=>row.id===id);
+ if(post?.image_path)echoAvatarCall_({action:'remove',path:post.image_path});
  echoTable_('PostComments',cache).remove(row=>row.post_id===id);
  echoTable_('PostReactions',cache).remove(row=>row.post_id===id);
  echoTable_('Posts',cache).remove(row=>row.id===id);
@@ -2021,30 +2035,37 @@ function echoRoomPublic_(cache,room) {
  return copy;
 }
 function echoCommunityAction_(body,user,cache) {
- const uid=user.user_id,action=body.action,audience=echoSocialAudience_(cache,user);
+ const uid=user.user_id,action=body.action,audience=echoSocialAudience_(cache,user),activeUsers=new Set(echoTable_('Users',cache).rows.filter(row=>row.account_status==='active').map(row=>row.user_id));
  if(action==='social.status') {
   echoFields_(body,[]);
   for(const name of ['Posts','PostComments','PostReactions','Danmaku','Rooms','RoomMessages'])echoTable_(name,cache);
-  return {capabilities:['feed','danmaku','rooms'],server_time:echoTime_()};
+  return {capabilities:['feed','square','post_images','danmaku','rooms'],server_time:echoTime_()};
  }
- if(action==='social.feed') {
-  echoFields_(body,['cursor']);
-  const page=echoSocialPage_(echoTable_('Posts',cache).rows.filter(row=>audience.has(row.user_id)),body.cursor,20);
+ if(action==='social.feed'){
+  echoFields_(body,['cursor','scope']);const scope=body.scope||'all';if(!['all','friends','mine'].includes(scope))echoFailure_('INVALID_REQUEST');
+  const page=echoSocialPage_(echoTable_('Posts',cache).rows.filter(row=>echoPostAccess_(row,uid,audience,activeUsers)&&(scope==='mine'?row.user_id===uid:scope==='friends'?audience.has(row.user_id):true)),body.cursor,20);
   const reactions=echoTable_('PostReactions',cache).rows,comments=echoTable_('PostComments',cache).rows;
-  return {posts:page.items.map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id),likes:reactions.filter(item=>item.post_id===row.id&&audience.has(item.user_id)).length,liked:reactions.some(item=>item.post_id===row.id&&item.user_id===uid),comments:comments.filter(item=>item.post_id===row.id&&audience.has(item.user_id)).length})),hasMore:page.hasMore};
+  const paths=[...new Set(page.items.map(row=>row.image_path).filter(Boolean))];let urls=[];
+  if(paths.length)urls=echoAvatarCall_({action:'sign',paths}).urls||[];
+  return {posts:page.items.map(row=>{const participants=echoPostVisibility_(row)==='public'?activeUsers:audience;return {...echoPostRow_(row),image_url:urls.find(image=>image.path===row.image_path)?.signedUrl||null,person:echoSocialPerson_(cache,row.user_id),likes:reactions.filter(item=>item.post_id===row.id&&participants.has(item.user_id)).length,liked:reactions.some(item=>item.post_id===row.id&&item.user_id===uid),comments:comments.filter(item=>item.post_id===row.id&&participants.has(item.user_id)).length}}),hasMore:page.hasMore};
  }
- if(action==='social.post') {
-  echoFields_(body,['id','body','track']);
-  const text=echoSocialText_(body.body,1000,true),track=body.track?echoSocialTrack_(body.track):null;
-  if(!text&&!track)echoFailure_('INVALID_SOCIAL_CONTENT');
-  const table=echoTable_('Posts',cache),existing=echoSocialExisting_(table,body.id,uid,{body:text,track});
-  if(existing)return {post:echoPublicRow_(existing)};
-  echoSocialLimit_(table,uid,200);
-  return {post:echoPublicRow_(table.put({id:body.id,user_id:uid,body:text,track,created_at:echoTime_()}))};
+ if(action==='social.post'){
+  echoFields_(body,['id','body','track','visibility','image']);
+  const text=echoSocialText_(body.body,1000,true),track=body.track?echoSocialTrack_(body.track):null,visibility=body.visibility??'friends',image=body.image??null;
+  if(!['public','friends'].includes(visibility))echoFailure_('INVALID_REQUEST');
+  if(image!==null&&(typeof image!=='string'||image.length>1400000||!/^[A-Za-z0-9+/]+={0,2}$/.test(image)))echoFailure_('INVALID_POST_IMAGE');
+  if(!text&&!track&&!image)echoFailure_('INVALID_SOCIAL_CONTENT');
+  if(!echoId_(body.id))echoFailure_('INVALID_REQUEST');
+  const table=echoTable_('Posts',cache),digest=image?echoDigest_(image):'',existing=table.rows.find(row=>row.id===body.id);
+  if(existing){if(existing.user_id!==uid||existing.body!==text||JSON.stringify(existing.track)!==JSON.stringify(track)||echoPostVisibility_(existing)!==visibility||(existing.image_digest||'')!==digest)echoFailure_('CONTENT_CONFLICT');return {post:echoPostRow_(existing)}}
+  echoSocialLimit_(table,uid,200);let path='';
+  if(image){path=uid+'/'+Utilities.getUuid()+'.jpg';echoAvatarCall_({action:'upload',path,image})}
+  try{return {post:echoPostRow_(table.put({id:body.id,user_id:uid,body:text,track,created_at:echoTime_(),visibility,image_path:path,image_digest:digest}))}}
+  catch(error){if(path)try{echoAvatarCall_({action:'remove',path})}catch{}throw error}
  }
  if(['social.delete','social.react','social.comments','social.comment','social.comment.delete'].includes(action)) {
   const post=echoTable_('Posts',cache).rows.find(row=>row.id===body.post_id);
-  if(!post||(!audience.has(post.user_id)&&!(user.role==='admin'&&action==='social.delete')))echoFailure_('FORBIDDEN');
+  if(!post||(!echoPostAccess_(post,uid,audience,activeUsers)&&!(user.role==='admin'&&action==='social.delete')))echoFailure_('FORBIDDEN');
   if(action==='social.delete') {
    echoFields_(body,['post_id']);if(post.user_id!==uid&&user.role!=='admin')echoFailure_('FORBIDDEN');echoDeletePost_(cache,post.id);return {};
   }
@@ -2057,7 +2078,7 @@ function echoCommunityAction_(body,user,cache) {
   }
   const table=echoTable_('PostComments',cache);
   if(action==='social.comments') {
-   echoFields_(body,['post_id','cursor']);const page=echoSocialPage_(table.rows.filter(row=>row.post_id===post.id&&audience.has(row.user_id)),body.cursor,30);
+   echoFields_(body,['post_id','cursor']);const page=echoSocialPage_(table.rows.filter(row=>row.post_id===post.id&&(echoPostVisibility_(post)==='public'?activeUsers:audience).has(row.user_id)),body.cursor,30);
    return {comments:page.items.map(row=>({...echoPublicRow_(row),person:echoSocialPerson_(cache,row.user_id)})),hasMore:page.hasMore};
   }
   if(action==='social.comment.delete') {

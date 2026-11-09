@@ -7,7 +7,7 @@ for(const [id,name,role] of [[A,'Alice','admin'],[B,'Bob','member'],[C,'Carol','
 }
 const friendId=crypto.randomUUID();f.put('Friendships',{id:friendId,requester_id:A,addressee_id:B,status:'accepted',created_at:now});
 const call=(uid,action,body={})=>f.post({action,session_token:sessions.get(uid),...body}),track={id:'sanctuary',title:'Sanctuary',artist:'Scott Buckley',src:'private'},id=crypto.randomUUID();
-assert.equal(call(A,'social.status').ok,true);assert.equal(f.context.echoSheetsHealth_().version,'5');
+assert.equal(call(A,'social.status').ok,true);assert.equal(f.context.echoSheetsHealth_().version,'6');
 assert.equal(call(A,'social.post',{id,body:'=IMPORTXML("bad") <script>',track}).ok,true);
 assert.equal(call(A,'social.post',{id,body:'=IMPORTXML("bad") <script>',track}).ok,true);assert.equal(f.records('Posts').length,1);
 assert.equal(call(B,'social.feed').posts[0].body,'=IMPORTXML("bad") <script>');assert(!('src' in call(B,'social.feed').posts[0].track));assert(!JSON.stringify(call(B,'social.feed')).includes('@example.invalid'));
