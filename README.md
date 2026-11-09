@@ -1,6 +1,6 @@
 # Echo
 
-Minimal, responsive music player. Version 0.16.1 keeps the YouTube Music search and playback engine with its video surface outside the visible layout, adds high-resolution responsive artwork, and supports Chinese and English in Settings. Password, avatar, Apps Script, membership, friends, and chat features from 0.5.0 are retained. Native audio still supports Audius streams, included licensed tracks, and files imported on the device. The optional Safari ad-helper script requires installing and authorizing the free Userscripts extension; actual ad skipping still needs verification on an iPhone. Settings now support light/dark themes and an opt-in animated background. Official Lucide icons, synchronized now-playing volume, artist profiles, album/single browsing, and verified release-date precision are included.
+Minimal, responsive music player. Version 0.16.2 keeps the YouTube Music search and playback engine with its video surface outside the visible layout, adds high-resolution responsive artwork, and supports Chinese and English in Settings. Password, avatar, Apps Script, membership, friends, and chat features from 0.5.0 are retained. Native audio still supports Audius streams, included licensed tracks, and files imported on the device. The optional Safari ad-helper script requires installing and authorizing the free Userscripts extension; actual ad skipping still needs verification on an iPhone. Settings now support light/dark themes and an opt-in animated background. Official Lucide icons, synchronized now-playing volume, artist profiles, album/single browsing, and verified release-date precision are included.
 
 The compact page toolbar, optional server-authorized user editor, and Safari helper 0.2.0 update are documented in [Administration and ad helper](docs/admin-and-ad-helper.md).
 
@@ -28,7 +28,7 @@ Square is a separate daily-life feed, with text-only or photo posts, optional mu
 
 The public-audience and photo features require [the focused Apps Script version 6 upgrade](apps-script/README.md#square-upgrade-version-6). Existing version 5 deployments continue to accept friends-only text posts; public/photo controls stay disabled until the server advertises support. This release does not migrate accounts or alter the existing password/session configuration. See [Square behavior and storage](docs/square.md).
 
-### 0.16.1
+### 0.16.2
 
 While a signed-in listener uses Echo, the app warms member/code lists (administrators only), friends, library and the main Square feed in memory. Opening a warmed page renders its last snapshot immediately and revalidates when stale. The visible lists and open comment threads check for changes approximately every four seconds without overlapping their own requests; slow responses extend the interval. Identity/role checks continue separately, with faster account-panel refreshes. No Apps Script update is required.
 

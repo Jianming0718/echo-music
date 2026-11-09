@@ -1,6 +1,6 @@
 # Background loading and live views
 
-Version 0.16.0 is a frontend-only change and uses the existing version-6 Apps Script API. It does not add a timer, trigger or database write to the server.
+Version 0.16.2 is a frontend-only change and uses the existing version-6 Apps Script API. It does not add a timer, trigger or database write to the server.
 
 ## Warm navigation
 
