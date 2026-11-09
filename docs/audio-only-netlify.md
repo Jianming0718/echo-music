@@ -6,7 +6,7 @@
 
 - 测试页：https://echo-audio-test--music-echo.netlify.app/
 - 健康接口：`/api/audio/health`，返回 HTTP 200、`version: 6`、`playbackVerified: false`。
-- 最新部署：`6af1eb81eec8c1d2ff0ac01d`，目标项目 `music-echo`。
+- 最新部署：`6af1f3ef35181df5e80d9821`，目标项目 `music-echo`，包含 Node 音频服务和独立 Edge 探测函数。
 - 实测 The Astronaut 与 Dynamite 均返回 HTTP 422、`SOURCE_LOGIN_REQUIRED`、`LOGIN_REQUIRED`，原因为 `Sign in to confirm you’re not a bot`。
 - Netlify 主域名保留原生产部署，GitHub Pages 主站仍是 Echo 0.17.1；新内核未启用，PR 保持草稿。
 
@@ -28,11 +28,26 @@
 
 ## 验证证据
 
-41 项音频相关自动化场景通过，覆盖字节转发、分段响应、来源/格式校验、取消、超时、缓存、大小上限、原生播放手势、旧歌曲 ID、快速切歌、验证回调跨 DOM 上下文的兼容性，以及公开错误信息脱敏。它们不证明真实音源可用。
+44 项音频自动化场景通过，覆盖字节转发、分段响应、来源/格式校验、取消、超时、缓存、大小上限、原生播放手势、旧歌曲 ID、快速切歌、验证回调跨 DOM 上下文的兼容性，以及公开错误信息脱敏。新增 Edge 检查覆盖固定测试歌曲、拒绝任意代理输入、脱敏、请求合并与音频范围响应核验。它们不证明真实音源可用。
 
 真实 Netlify 探测始终未取得音频：两首测试歌曲在最新部署中仍要求登录确认非机器人。匿名挑战/令牌流程未解除上游拒绝，不能据此称为「已实现可用的无广告播放」。没有完整歌曲、听感、物理 iPhone 或后台锁屏的成功测试。
 
 服务健康检查只表明程序能响应。测试页可用于复现，尚不是可替代生产音乐播放器的版本。用户需要的主站切换仍待真实音频通过验证；不能以本机模拟测试替代此门槛。
+
+## Edge 实测与外部项目核对
+
+2026-11-09，独立的 `/api/audio/edge-probe?v=c6ASQOwKkhk` 与 `?v=gdZLi9oWNZg` 均成功运行 Edge 函数，但上游播放器返回 `UNPLAYABLE`、`Sign in to confirm you’re not a bot`。HTTP 200 是诊断结果的传输状态，不代表歌曲能播。`playbackVerified` 保持 `false`，未取得真实音频。此实验只证明该客户端请求在本次边缘出口失败，不能推断所有边缘服务或所有客户端都不可行。
+
+探测函数只允许这两首固定测试歌曲；不接受代理地址，不返回访客资料或签名链接。每次上游请求有 10 秒期限，读取大小受限；同实例结果缓存 30 秒并合并并发请求。即使取得音频文件的头部，也只标记范围校验结果，不宣称完整播放成功。路由在 `netlify.toml` 明确声明，避免已打包但没有路由的函数静默不运行。
+
+用户提供的两个项目已核对：
+
+- [NouTube](https://github.com/nonbili/NouTube) 的移动端包装 YouTube 网页，在原生 WebView 中注入脚本。其 [iOS 实现](https://github.com/nonbili/NouTube/blob/main/modules/nou-tube-view/ios/NouTubeView.swift) 在文档开始时注入代码；[内容拦截](https://github.com/nonbili/NouTube/blob/main/content/intercept.ts) 与 [响应处理](https://github.com/nonbili/NouTube/blob/main/lib/intercept.ts) 修改网页请求和广告字段。桌面版使用 Electron 会话协议拦截；扩展版申请 YouTube 域名权限。它没有提供供 Echo 网站直接调用的公共音源 API。普通 Safari 页面无法获得这些原生或扩展权限，也不能注入另一个来源的 iframe。原生路线值得另行评估，但不能把 App 机制宣称为已实现的纯网页音频后端。
+- [Reddit 作者原帖及说明](https://www.reddit.com/r/webdev/comments/184tk3m/i_made_a_very_simple_website_that_gets_you_an/) 的核心是生成 YouTube iframe；作者也提到依靠浏览器广告拦截扩展。它不是独立音频解析服务，不能替代当前候选的原生 audio 传输层，也没有证明当前 iPhone 无扩展时能够无广告播放。
+
+以上仅作架构研究，没有复制 NouTube 的 AGPL-3.0 代码，也没有接入它的私人后端或更改 Echo 的许可证。用户没有常开电脑或 NAS，因此未采用依赖用户自托管设备的方案。
+
+用户进一步明确希望隐藏 iframe，而非删除播放内核。核对 `main` 的 `dist/index.html` 与 `dist/refined.css`，现有生产版已经保留 `youtube-engine` 容器，并用 `.media-engine` 的 `left:-10000px` 移出屏幕。该行为只隐藏画面，不会移除广告，也不会赋予 Echo 操作跨域 iframe 内部请求的权限。此实验没有更改生产版的隐藏方式。
 
 ## 部署与运行约束
 

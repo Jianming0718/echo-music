@@ -11,6 +11,10 @@
   node_bundler = "esbuild"
   external_node_modules = ["youtubei.js", "quickjs-emscripten", "bgutils-js", "jsdom-proof"]
 
+[[edge_functions]]
+  function = "audio-probe"
+  path = "/api/audio/edge-probe"
+
 [[headers]]
   for = "/config.js"
   [headers.values]
