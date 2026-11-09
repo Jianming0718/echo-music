@@ -12,6 +12,7 @@
     "emails:build": "node scripts/email-templates.mjs",
     "test:audio": "node --test tests/audio-gateway.test.mjs tests/audio-resolver.test.mjs tests/audio-build.test.mjs tests/proof-context.test.mjs tests/edge-audio-probe.test.mjs && node tests/audio-only-playback.test.cjs",
     "audio:probe": "node scripts/probe-audio.mjs",
+    "audio:probe:edge": "node scripts/probe-edge-audio.mjs",
     "build:netlify": "node scripts/write-config.mjs"
   },
   "dependencies": {

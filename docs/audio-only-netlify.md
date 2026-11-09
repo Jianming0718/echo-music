@@ -6,7 +6,7 @@
 
 - 测试页：https://echo-audio-test--music-echo.netlify.app/
 - 健康接口：`/api/audio/health`，返回 HTTP 200、`version: 6`、`playbackVerified: false`。
-- 最新部署：`6af1f3ef35181df5e80d9821`，目标项目 `music-echo`，包含 Node 音频服务和独立 Edge 探测函数。
+- 最新部署：`6af222f6f462b4da0e17f011`，目标项目 `music-echo`，包含 Node 音频服务和独立 Edge 探测函数；探测响应为 `probeVersion: 2`。
 - 实测 The Astronaut 与 Dynamite 均返回 HTTP 422、`SOURCE_LOGIN_REQUIRED`、`LOGIN_REQUIRED`，原因为 `Sign in to confirm you’re not a bot`。
 - Netlify 主域名保留原生产部署，GitHub Pages 主站仍是 Echo 0.17.1；新内核未启用，PR 保持草稿。
 
@@ -28,7 +28,7 @@
 
 ## 验证证据
 
-44 项音频自动化场景通过，覆盖字节转发、分段响应、来源/格式校验、取消、超时、缓存、大小上限、原生播放手势、旧歌曲 ID、快速切歌、验证回调跨 DOM 上下文的兼容性，以及公开错误信息脱敏。新增 Edge 检查覆盖固定测试歌曲、拒绝任意代理输入、脱敏、请求合并与音频范围响应核验。它们不证明真实音源可用。
+45 项音频自动化场景通过，覆盖字节转发、分段响应、来源/格式校验、取消、超时、缓存、大小上限、原生播放手势、旧歌曲 ID、快速切歌、验证回调跨 DOM 上下文的兼容性，以及公开错误信息脱敏。新增 Edge 检查覆盖固定测试歌曲、拒绝任意代理输入、脱敏、请求合并、不同客户端的缓存隔离与音频范围响应核验。它们不证明真实音源可用。
 
 真实 Netlify 探测始终未取得音频：两首测试歌曲在最新部署中仍要求登录确认非机器人。匿名挑战/令牌流程未解除上游拒绝，不能据此称为「已实现可用的无广告播放」。没有完整歌曲、听感、物理 iPhone 或后台锁屏的成功测试。
 
@@ -40,10 +40,25 @@
 
 探测函数只允许这两首固定测试歌曲；不接受代理地址，不返回访客资料或签名链接。每次上游请求有 10 秒期限，读取大小受限；同实例结果缓存 30 秒并合并并发请求。即使取得音频文件的头部，也只标记范围校验结果，不宣称完整播放成功。路由在 `netlify.toml` 明确声明，避免已打包但没有路由的函数静默不运行。
 
+新增 `profile` 参数仅接受以下五种固定客户端配置。除原版 visionOS 外，参数依据已固定的 `youtubei.js@18.3.0` 客户端常量核对；它们是服务器请求配置，不是实际运行对应设备或浏览器。读取观看页中的签名时间戳后附加到播放器请求（若存在），嵌入版附带固定嵌入上下文。结果缓存按歌曲和配置分别存放，不混用。
+
+在部署 `6af222f6f462b4da0e17f011` 上，每种配置分别测试 The Astronaut 与 Dynamite，结果如下：
+
+| 请求配置 | 两首歌的上游状态 | 上游原因 |
+| --- | --- | --- |
+| `visionos`（0.1） | `UNPLAYABLE` | 要求确认非机器人 |
+| `visionos-current`（1.02） | `LOGIN_REQUIRED` | 要求确认非机器人 |
+| `ios`（20.11.6） | `LOGIN_REQUIRED` | 要求确认非机器人 |
+| `web-embedded` | `ERROR` | 视频不可用 |
+| `tv-embedded` | `ERROR` | 应用或设备不再受支持 |
+
+10 次诊断均返回 `probeVersion: 2`，但 `verifiedRanges: 0`；没有取得音频文件头，更没有完整播放。现有 Node 网关也复测两首歌，仍返回 HTTP 422、`SOURCE_LOGIN_REQUIRED`。公开结果见 [诊断记录](audio-probe-results-2026-11-09.json)。这些结果只适用于本次请求配置和服务器网络，不能推断用户浏览器中播放同一歌曲的结果。
+
 用户提供的两个项目已核对：
 
 - [NouTube](https://github.com/nonbili/NouTube) 的移动端包装 YouTube 网页，在原生 WebView 中注入脚本。其 [iOS 实现](https://github.com/nonbili/NouTube/blob/main/modules/nou-tube-view/ios/NouTubeView.swift) 在文档开始时注入代码；[内容拦截](https://github.com/nonbili/NouTube/blob/main/content/intercept.ts) 与 [响应处理](https://github.com/nonbili/NouTube/blob/main/lib/intercept.ts) 修改网页请求和广告字段。桌面版使用 Electron 会话协议拦截；扩展版申请 YouTube 域名权限。它没有提供供 Echo 网站直接调用的公共音源 API。普通 Safari 页面无法获得这些原生或扩展权限，也不能注入另一个来源的 iframe。原生路线值得另行评估，但不能把 App 机制宣称为已实现的纯网页音频后端。
 - [Reddit 作者原帖及说明](https://www.reddit.com/r/webdev/comments/184tk3m/i_made_a_very_simple_website_that_gets_you_an/) 的核心是生成 YouTube iframe；作者也提到依靠浏览器广告拦截扩展。它不是独立音频解析服务，不能替代当前候选的原生 audio 传输层，也没有证明当前 iPhone 无扩展时能够无广告播放。
+- [YouTube iFrame AdBlocker 源码](https://greasyfork.org/en/scripts/477725-youtube-iframe-adblocker/code) 是版本 1.0，页面标明更新于 2023-10-18。它监听 YouTube 的反广告拦截提示，再用普通 `/embed/视频编号?autoplay=1` iframe 替换提示；没有实现广告请求过滤、广告数据删除或独立音源解析。脚本匹配 YouTube 主站，需要脚本管理器；直接加到 Echo 不会获得跨域权限。未在真实 iPhone 上验证此脚本，因此不声称它当前仍能绕过检测或保证无广告。Echo 已经使用嵌入播放器，未把这个重复机制加入生产版。
 
 以上仅作架构研究，没有复制 NouTube 的 AGPL-3.0 代码，也没有接入它的私人后端或更改 Echo 的许可证。用户没有常开电脑或 NAS，因此未采用依赖用户自托管设备的方案。
 
@@ -67,6 +82,7 @@ Google 可以限制服务器来源、变更私有协议或要求有效登录/运
 npm ci --ignore-scripts
 npm run test:audio
 npm run audio:probe -- https://echo-audio-test--music-echo.netlify.app
+npm run audio:probe:edge -- https://echo-audio-test--music-echo.netlify.app
 ```
 
 只有真实服务通过音频字节、完整歌曲与拖动验证后，才设置公开 `ECHO_PLAYBACK_MODE=audio-only` 和 `ECHO_AUDIO_GATEWAY_URL`。缺少有效 HTTPS 服务地址时构建会拒绝启用纯音频，防止发布不能播歌的配置。GitHub Pages 本身不运行音频解析代码。
