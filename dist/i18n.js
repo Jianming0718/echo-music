@@ -212,6 +212,7 @@ Premium 已到期\tPremium expired
 发布\tPost
 评论\tComment
 刷新动态\tRefresh activity
+播放收藏\tPlay favorites
 发布动态\tNew post
 收起编辑器\tClose composer
 删除评论\tDelete comment
